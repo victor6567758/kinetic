@@ -4,19 +4,24 @@ import java.util.Collections;
 import java.util.List;
 import lombok.Getter;
 
-public class KineticHeap implements IKineticHeap<KineticElement>, IEventSink {
+public class KineticHeap implements IKineticHeap, IEventSink {
 
   @Getter
   private final Heap<KineticElement> heap = new Heap<>(this);
 
   private final Heap<Certificate> certificates = new Heap<>(null);
 
-  @Getter
   private int curTime;
+
 
   @Override
   public KineticElement extractMin() {
     return heap.extractMin();
+  }
+
+  @Override
+  public int getCurTime() {
+    return curTime;
   }
 
   @Override
@@ -27,6 +32,12 @@ public class KineticHeap implements IKineticHeap<KineticElement>, IEventSink {
   @Override
   public void insert(KineticElement data) {
     heap.insert(data);
+  }
+
+  @Override
+  public void clear() {
+    heap.clear();
+    certificates.clear();
   }
 
   @Override

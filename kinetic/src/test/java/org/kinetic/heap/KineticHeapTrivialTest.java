@@ -1,6 +1,6 @@
 package org.kinetic.heap;
 
-import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
 import com.opencsv.CSVReader;
 import com.opencsv.CSVReaderBuilder;
@@ -9,25 +9,21 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.IntStream;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.kinetic.HeapImageCreator;
+import org.kinetic.Utils;
 
-class KineticHeapTest {
+class KineticHeapTrivialTest {
 
-  private HeapImageCreator heapImageCreator;
-
-  private KineticHeap kineticHeap;
+  private KineticHeapTrivial kineticHeap;
 
 
   @BeforeEach
   public void setUp() {
-    kineticHeap = new KineticHeap();
+    kineticHeap = new KineticHeapTrivial();
 
-    heapImageCreator = new HeapImageCreator(kineticHeap, "testExample");
   }
 
   @Test
@@ -37,8 +33,8 @@ class KineticHeapTest {
           ThreadLocalRandom.current().nextDouble(0.0, 10.0),
           ThreadLocalRandom.current().nextDouble(0.5, 2.0), () -> kineticHeap.getCurTime());
       kineticHeap.insert(kineticElement);
-      assertThat(confirmCertificatesAreOk(kineticHeap.getHeap().getHeapArray(KineticElement.class),
-          kineticHeap.getCurTime(), 0, kineticHeap.size() - 1)).isTrue();
+      assertThat(heapChecker(kineticHeap.getHeap().getHeapArray(KineticElement.class),
+          0, kineticHeap.size() - 1)).isTrue();
     });
   }
 
@@ -53,8 +49,8 @@ class KineticHeapTest {
 
     while (kineticHeap.size() > 0) {
       kineticHeap.extractMin();
-      assertThat(confirmCertificatesAreOk(kineticHeap.getHeap().getHeapArray(KineticElement.class),
-          kineticHeap.getCurTime(), 0, kineticHeap.size() - 1)).isTrue();
+      assertThat(heapChecker(kineticHeap.getHeap().getHeapArray(KineticElement.class),
+          0, kineticHeap.size() - 1)).isTrue();
     }
   }
 
@@ -65,18 +61,18 @@ class KineticHeapTest {
           ThreadLocalRandom.current().nextDouble(0.5, 2.0), () -> kineticHeap.getCurTime()));
       kineticHeap.insert(new KineticElement(id, ThreadLocalRandom.current().nextDouble(0.0, 10.0),
           ThreadLocalRandom.current().nextDouble(0.5, 2.0), () -> kineticHeap.getCurTime()));
-      assertThat(confirmCertificatesAreOk(kineticHeap.getHeap().getHeapArray(KineticElement.class),
-          kineticHeap.getCurTime(), 0, kineticHeap.size() - 1)).isTrue();
+      assertThat(heapChecker(kineticHeap.getHeap().getHeapArray(KineticElement.class),
+          0, kineticHeap.size() - 1)).isTrue();
 
       kineticHeap.extractMin();
-      assertThat(confirmCertificatesAreOk(kineticHeap.getHeap().getHeapArray(KineticElement.class),
-          kineticHeap.getCurTime(), 0, kineticHeap.size() - 1)).isTrue();
+      assertThat(heapChecker(kineticHeap.getHeap().getHeapArray(KineticElement.class),
+          0, kineticHeap.size() - 1)).isTrue();
     });
 
     while (kineticHeap.size() > 0) {
       kineticHeap.extractMin();
-      assertThat(confirmCertificatesAreOk(kineticHeap.getHeap().getHeapArray(KineticElement.class),
-          kineticHeap.getCurTime(), 0, kineticHeap.size() - 1)).isTrue();
+      assertThat(heapChecker(kineticHeap.getHeap().getHeapArray(KineticElement.class),
+          0, kineticHeap.size() - 1)).isTrue();
     }
   }
 
@@ -96,29 +92,26 @@ class KineticHeapTest {
     }
 
     list.forEach(e -> {
-
       KineticElement kineticElement = new KineticElement(e.getId(),
           e.getInitialPriority(),
           e.getRate(), () -> kineticHeap.getCurTime());
       kineticHeap.insert(kineticElement);
-      assertThat(confirmCertificatesAreOk(kineticHeap.getHeap().getHeapArray(KineticElement.class),
-          kineticHeap.getCurTime(), 0, kineticHeap.size() - 1)).isTrue();
+      assertThat(heapChecker(kineticHeap.getHeap().getHeapArray(KineticElement.class),
+          0, kineticHeap.size() - 1)).isTrue();
     });
+
+    List<KineticElement[]> pairs = Utils.kineticElementsPermutations(kineticHeap.getHeap().getHeapList());
+    double maxIntersectionTime = pairs.stream().map(p -> p[0].getIntersectionTime(p[1]))
+        .filter(p -> p >= 0).mapToDouble(x -> x).max().orElse(-1.0);
 
     int t = 0;
     while (true) {
-      double maxCertTime = kineticHeap.getHeap().getHeapList().stream()
-          .map(KineticElement::getCertificate).
-          filter(Objects::nonNull).map(Certificate::getExpirationTime).mapToDouble(n -> n).max()
-          .orElse(-1.0);
-
       kineticHeap.fastForward(t);
-      heapImageCreator.process(t);
-      assertThat(confirmCertificatesAreOk(kineticHeap.getHeap().getHeapArray(KineticElement.class),
-          kineticHeap.getCurTime(), 0, kineticHeap.size() - 1)).isTrue();
+      assertThat(heapChecker(kineticHeap.getHeap().getHeapArray(KineticElement.class),
+          0, kineticHeap.size() - 1)).isTrue();
 
       // just to make one my cycle
-      if (t - 1 > maxCertTime) {
+      if (t - 1 > maxIntersectionTime) {
         break;
       }
 
@@ -128,7 +121,7 @@ class KineticHeapTest {
   }
 
 
-  private boolean confirmCertificatesAreOk(KineticElement[] elements, int curTime, int i, int n) {
+  private boolean heapChecker(KineticElement[] elements, int i, int n) {
     if (i >= (n - 1) / 2) {
       return true;
     }
@@ -142,22 +135,8 @@ class KineticHeapTest {
       return false;
     }
 
-    if (leftChild.getCertificate() != null) {
-      if (!leftChild.getCertificate().isValid()
-          || leftChild.getCertificate().getExpirationTime() < curTime) {
-        return false;
-      }
-    }
-
-    if (rightChild.getCertificate() != null) {
-      if (!rightChild.getCertificate().isValid()
-          || rightChild.getCertificate().getExpirationTime() < curTime) {
-        return false;
-      }
-    }
-
-    return confirmCertificatesAreOk(elements, curTime, Heap.getLeftChild(i), n)
-        && confirmCertificatesAreOk(elements, curTime, Heap.getRightChild(i), n);
+    return heapChecker(elements, Heap.getLeftChild(i), n)
+        && heapChecker(elements, Heap.getRightChild(i), n);
 
   }
 

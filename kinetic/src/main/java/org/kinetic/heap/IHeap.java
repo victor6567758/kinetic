@@ -9,4 +9,6 @@ public interface IHeap<T extends Comparable<T>> {
   void insert(T data);
 
   int size();
+
+  void clear();
 }

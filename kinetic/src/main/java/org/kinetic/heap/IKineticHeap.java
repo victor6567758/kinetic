@@ -1,6 +1,8 @@
 package org.kinetic.heap;
 
-public interface IKineticHeap<T extends Comparable<T>> extends IHeap<T> {
+public interface IKineticHeap extends IHeap<KineticElement> {
 
-  void fastForward(int timeToForward);
+  void fastForward(int nextTime);
+
+  int getCurTime();
 }

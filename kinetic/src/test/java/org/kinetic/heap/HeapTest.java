@@ -10,7 +10,7 @@ import java.util.concurrent.ThreadLocalRandom;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-class TrivialHeapTest {
+class HeapTest {
 
   private Heap<Integer> heap;
   private List<Integer> sourceData;

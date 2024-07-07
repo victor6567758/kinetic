@@ -14,6 +14,11 @@ public class Heap<T extends Comparable<T>> implements IHeap<T> {
   private final IEventSink eventSink;
 
   @Override
+  public void clear() {
+    heap.clear();
+  }
+
+  @Override
   public void insert(T data) {
     if (data == null) {
       throw new IllegalArgumentException("Invalid data");
@@ -157,14 +162,16 @@ public class Heap<T extends Comparable<T>> implements IHeap<T> {
     return curIndex;
   }
 
-  public void remove(int idx) {
+  public int remove(int idx) {
     heap.set(idx, heap.get(heap.size() - 1));
     heap.remove(heap.size() - 1);
 
     int index = heapDown(idx);
     if (index == idx && index < heap.size()) {
-      heapUp(index);
+      index = heapUp(index);
     }
+
+    return index;
   }
 
 
