@@ -38,7 +38,7 @@ public class HeapImageCreator {
 
     File file = new File(this.targetDir, "t" + time + "_moment.png");
     Graph graph = graph("Graph: " + time).directed().with(root);
-    Graphviz.fromGraph(graph).width(1000).height(1000).render(Format.PNG).toFile(file);
+    Graphviz.fromGraph(graph).width(2000).height(1500).render(Format.PNG).toFile(file);
   }
 
   private Node createNode(KineticHeap kineticHeap, int index) {

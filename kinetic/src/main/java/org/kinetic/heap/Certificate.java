@@ -16,12 +16,16 @@ public class Certificate implements Comparable<Certificate> {
   private final double expirationTime;
 
   @Setter
-  private boolean isValid = true;
-
+  private int ownIdx = -1;
 
   @Override
   public int compareTo(Certificate other) {
     return Double.compare(expirationTime, other.expirationTime);
+  }
+
+  @Override
+  public String toString() {
+    return "Heap idx: " + ownIdx + ", element idx: " + elementIdx + ", expiration: " + FORMATTER.format(expirationTime);
   }
 
 

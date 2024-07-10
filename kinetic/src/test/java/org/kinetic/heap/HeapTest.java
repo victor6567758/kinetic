@@ -2,11 +2,15 @@ package org.kinetic.heap;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.PriorityQueue;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.stream.IntStream;
+import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -15,6 +19,30 @@ class HeapTest {
   private Heap<Integer> heap;
   private List<Integer> sourceData;
 
+  @AllArgsConstructor
+  static class HeapPriorityElement implements Comparable<HeapPriorityElement> {
+
+    private int priority;
+
+    @Override
+    public int compareTo(HeapPriorityElement o) {
+      return priority - o.priority;
+    }
+  }
+
+  @RequiredArgsConstructor
+  static class HeapRefElement implements Comparable<HeapRefElement> {
+
+    private final int element;
+
+    private int ownIdx = -1;
+
+    @Override
+    public int compareTo(HeapRefElement o) {
+      return element - o.element;
+    }
+  }
+
   @BeforeEach
   public void setUp() {
     heap = new Heap<>(null);
@@ -22,9 +50,258 @@ class HeapTest {
   }
 
   @Test
+  public void moveElementWithIncreasedPriority() {
+    Heap<HeapPriorityElement> heapPriority = new Heap<>(null);
+    List<HeapPriorityElement> input = new ArrayList<>(
+        IntStream.range(1, 10).boxed().map(HeapPriorityElement::new).toList());
+    Collections.shuffle(input);
+    input.forEach(e -> {
+      heapPriority.insert(e);
+
+    });
+
+    HeapPriorityElement[] heapArray = heapPriority.getHeapArray(HeapPriorityElement.class);
+    assertThat(heapChecker(heapArray, 0, heapArray.length - 1)).isTrue();
+
+    int idx = 0;
+    heapArray[idx].priority += 100;
+
+    int index = heapPriority.heapDown(idx);
+    if (index == idx && index < heapPriority.size()) {
+      index = heapPriority.heapUp(index);
+    }
+
+    heapArray = heapPriority.getHeapArray(HeapPriorityElement.class);
+    assertThat(heapChecker(heapArray, 0, heapArray.length - 1)).isTrue();
+
+  }
+
+  @Test
+  public void moveElementWithIncreasedPriorityRandom() {
+    Heap<HeapPriorityElement> heapPriority = new Heap<>(null);
+    List<HeapPriorityElement> input = new ArrayList<>(
+        IntStream.range(1, 1000).boxed().map(HeapPriorityElement::new).toList());
+    Collections.shuffle(input);
+    input.forEach(e -> {
+      heapPriority.insert(e);
+
+    });
+
+    HeapPriorityElement[] heapArray = heapPriority.getHeapArray(HeapPriorityElement.class);
+    assertThat(heapChecker(heapArray, 0, heapArray.length - 1)).isTrue();
+
+    int cnt = 10;
+    while (true) {
+
+      if (cnt++ >= 100) {
+        break;
+      }
+
+      int idx = ThreadLocalRandom.current().nextInt(0, heapPriority.size());
+      heapArray[idx].priority += 100;
+
+      int index = heapPriority.heapDown(idx);
+      if (index == idx && index < heapPriority.size()) {
+        index = heapPriority.heapUp(index);
+      }
+
+      heapArray = heapPriority.getHeapArray(HeapPriorityElement.class);
+      assertThat(heapChecker(heapArray, 0, heapArray.length - 1)).isTrue();
+    }
+
+  }
+
+  @Test
+  public void testHeapWithSelfReferencedElements() {
+    Heap<HeapRefElement> selfRefHeap = new Heap<>(null);
+    IEventSink sink = new IEventSink() {
+
+      Heap<HeapRefElement> pThis;
+
+      IEventSink init(Heap<HeapRefElement> heap) {
+        pThis = heap;
+        return this;
+      }
+
+      @Override
+      public void onBubbleUpEventBeforeSwap(int idx, int parentIdx) {
+
+      }
+
+      @Override
+      public void onBubbleUpEventAfterSwap(int idx, int parentIdx) {
+        pThis.getHeapList().get(parentIdx).ownIdx = parentIdx;
+        pThis.getHeapList().get(idx).ownIdx = idx;
+      }
+
+      @Override
+      public void onBubbleUpEventNoChange(int idx) {
+        pThis.getHeapList().get(idx).ownIdx = idx;
+      }
+
+      @Override
+      public void onBubbleDownEventBeforeSwap(int idx, int parentIdx) {
+
+      }
+
+      @Override
+      public void onBubbleDownEventAfterSwap(int idx, int parentIdx) {
+        pThis.getHeapList().get(parentIdx).ownIdx = parentIdx;
+        pThis.getHeapList().get(idx).ownIdx = idx;
+      }
+
+      @Override
+      public void onBubbleDownEventNoChange(int idx) {
+        pThis.getHeapList().get(idx).ownIdx = idx;
+      }
+    }.init(selfRefHeap);
+    selfRefHeap.setEventSink(sink);
+
+    List<HeapRefElement> input = IntStream.range(1, 1000).boxed().map(HeapRefElement::new).toList();
+    input.forEach(e -> {
+      selfRefHeap.insert(e);
+      assertSelfHeap(selfRefHeap);
+
+      HeapRefElement[] heapArray = selfRefHeap.getHeapArray(HeapRefElement.class);
+      assertThat(heapChecker(heapArray, 0, heapArray.length - 1)).isTrue();
+
+    });
+
+  }
+
+  @Test
+  public void testHeapWithSelfReferencedElementsRemoveAfterInserts() {
+    Heap<HeapRefElement> selfRefHeap = new Heap<>(null);
+    IEventSink sink = new IEventSink() {
+
+      Heap<HeapRefElement> pThis;
+
+      IEventSink init(Heap<HeapRefElement> heap) {
+        pThis = heap;
+        return this;
+      }
+
+      @Override
+      public void onBubbleUpEventBeforeSwap(int idx, int parentIdx) {
+
+      }
+
+      @Override
+      public void onBubbleUpEventAfterSwap(int idx, int parentIdx) {
+        pThis.getHeapList().get(parentIdx).ownIdx = parentIdx;
+        pThis.getHeapList().get(idx).ownIdx = idx;
+      }
+
+      @Override
+      public void onBubbleUpEventNoChange(int idx) {
+        pThis.getHeapList().get(idx).ownIdx = idx;
+      }
+
+      @Override
+      public void onBubbleDownEventBeforeSwap(int idx, int parentIdx) {
+
+      }
+
+      @Override
+      public void onBubbleDownEventAfterSwap(int idx, int parentIdx) {
+        pThis.getHeapList().get(parentIdx).ownIdx = parentIdx;
+        pThis.getHeapList().get(idx).ownIdx = idx;
+      }
+
+      @Override
+      public void onBubbleDownEventNoChange(int idx) {
+        pThis.getHeapList().get(idx).ownIdx = idx;
+      }
+    }.init(selfRefHeap);
+    selfRefHeap.setEventSink(sink);
+
+    List<HeapRefElement> input = IntStream.range(1, 1000).boxed().map(HeapRefElement::new).toList();
+    for (int i = 0; i < input.size() - 1; i += 2) {
+      selfRefHeap.insert(input.get(i));
+      selfRefHeap.insert(input.get(i + 1));
+
+      selfRefHeap.extractMin();
+      assertSelfHeap(selfRefHeap);
+
+      HeapRefElement[] heapArray = selfRefHeap.getHeapArray(HeapRefElement.class);
+      assertThat(heapChecker(heapArray, 0, heapArray.length - 1)).isTrue();
+
+    }
+
+  }
+
+
+  @Test
+  public void testHeapWithSelfReferencedElementsRemoveAfterInsertsMiddle() {
+    Heap<HeapRefElement> selfRefHeap = new Heap<>(null);
+    IEventSink sink = new IEventSink() {
+
+      Heap<HeapRefElement> pThis;
+
+      IEventSink init(Heap<HeapRefElement> heap) {
+        pThis = heap;
+        return this;
+      }
+
+      @Override
+      public void onBubbleUpEventBeforeSwap(int idx, int parentIdx) {
+
+      }
+
+      @Override
+      public void onBubbleUpEventAfterSwap(int idx, int parentIdx) {
+        pThis.getHeapList().get(parentIdx).ownIdx = parentIdx;
+        pThis.getHeapList().get(idx).ownIdx = idx;
+      }
+
+      @Override
+      public void onBubbleUpEventNoChange(int idx) {
+        if (idx < pThis.getHeapList().size()) {
+          pThis.getHeapList().get(idx).ownIdx = idx;
+        }
+      }
+
+      @Override
+      public void onBubbleDownEventBeforeSwap(int idx, int parentIdx) {
+
+      }
+
+      @Override
+      public void onBubbleDownEventAfterSwap(int idx, int parentIdx) {
+        pThis.getHeapList().get(parentIdx).ownIdx = parentIdx;
+        pThis.getHeapList().get(idx).ownIdx = idx;
+      }
+
+      @Override
+      public void onBubbleDownEventNoChange(int idx) {
+        if (idx < pThis.getHeapList().size()) {
+          pThis.getHeapList().get(idx).ownIdx = idx;
+        }
+      }
+    }.init(selfRefHeap);
+    selfRefHeap.setEventSink(sink);
+
+    List<HeapRefElement> input = IntStream.range(1, 1000).boxed().map(HeapRefElement::new).toList();
+    for (int i = 0; i < input.size() - 1; i += 2) {
+      selfRefHeap.insert(input.get(i));
+      selfRefHeap.insert(input.get(i + 1));
+
+      int removeIdx = selfRefHeap.size() / 2;
+      selfRefHeap.remove(removeIdx);
+      assertSelfHeap(selfRefHeap);
+
+      HeapRefElement[] heapArray = selfRefHeap.getHeapArray(HeapRefElement.class);
+      assertThat(heapChecker(heapArray, 0, heapArray.length - 1)).isTrue();
+
+    }
+
+
+  }
+
+  @Test
   public void checkSiblingsIdx() {
     List<Integer> input = Arrays.asList(1, 3, 8, 20, 21, 25, 27);
-                                //      0   1   2   3   4   5   6
+    //      0   1   2   3   4   5   6
     Collections.shuffle(input);
     input.forEach(e -> heap.insert(e));
 
@@ -41,7 +318,7 @@ class HeapTest {
   @Test
   public void checkChildIdx() {
     List<Integer> input = Arrays.asList(1, 3, 8, 20, 21, 25, 27);
-                                //      0   1   2   3   4   5   6
+    //      0   1   2   3   4   5   6
     Collections.shuffle(input);
     input.forEach(e -> heap.insert(e));
 
@@ -95,7 +372,7 @@ class HeapTest {
   public void bulkTest() {
     PriorityQueue<Integer> priorityQueue = new PriorityQueue<>();
 
-    for (int element: sourceData) {
+    for (int element : sourceData) {
       heap.insert(element);
       priorityQueue.add(element);
     }
@@ -110,7 +387,7 @@ class HeapTest {
   @Test
   public void checkValidMinHeap() {
     sourceData.forEach(e -> heap.insert(e));
-    int[] heapArray = heap.getHeapList().stream().mapToInt(i -> i).toArray();
+    Integer[] heapArray = heap.getHeapArray(Integer.class);
     assertThat(heapChecker(heapArray, 0, heapArray.length - 1)).isTrue();
   }
 
@@ -121,20 +398,27 @@ class HeapTest {
     heap.remove(2);
     heap.remove(2);
 
-    int[] heapArray = heap.getHeapList().stream().mapToInt(i -> i).toArray();
+    Integer[] heapArray = heap.getHeapArray(Integer.class);
     assertThat(heapChecker(heapArray, 0, heapArray.length - 1)).isTrue();
   }
 
-  private boolean heapChecker(int[] nums, int i, int n) {
-    if (i >= (n - 1) / 2)
+  private <T extends Comparable<T>> boolean heapChecker(T[] nums, int i, int n) {
+    if (i >= (n - 1) / 2) {
       return true;
+    }
 
-    return nums[i] <= nums[2 * i + 1] && nums[i] <= nums[2 * i + 2] &&
+    return nums[i].compareTo(nums[2 * i + 1]) <= 0 && nums[i].compareTo(nums[2 * i + 2]) <= 0 &&
         heapChecker(nums, 2 * i + 1, n) && heapChecker(nums, 2 * i + 2, n);
   }
 
+  private void assertSelfHeap(Heap<HeapRefElement> sourceHeap) {
+    HeapRefElement[] elements = sourceHeap.getHeapArray(HeapRefElement.class);
 
-
+    for (int i = 0; i < elements.length; i++) {
+      assertThat(elements[i].ownIdx).isNotEqualTo(-1);
+      assertThat(elements[i].ownIdx).isEqualTo(i);
+    }
+  }
 
 
 }

@@ -1,17 +1,24 @@
 package org.kinetic.heap;
 
+import com.google.common.annotations.VisibleForTesting;
 import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import lombok.Setter;
 
 @RequiredArgsConstructor
+@AllArgsConstructor
 public class Heap<T extends Comparable<T>> implements IHeap<T> {
 
   private final List<T> heap = new ArrayList<>();
 
-  private final IEventSink eventSink;
+  @Setter
+  @VisibleForTesting
+  private IEventSink eventSink;
 
   @Override
   public void clear() {
@@ -66,6 +73,7 @@ public class Heap<T extends Comparable<T>> implements IHeap<T> {
     return (idx - 1) / 2;
   }
 
+
   public static int getLeftChild(int idx) {
     return 2 * idx + 1;
   }
@@ -84,12 +92,7 @@ public class Heap<T extends Comparable<T>> implements IHeap<T> {
       throw new IllegalArgumentException("Root cannot have siblings");
     }
 
-    if (idx % 2 == 0) {
-      return idx - 1;
-    } else {
-      return idx + 1;
-    }
-
+    return idx % 2 == 0 ? idx - 1 : idx + 1;
   }
 
   public T getValue(int idx) {
@@ -116,9 +119,8 @@ public class Heap<T extends Comparable<T>> implements IHeap<T> {
     }
 
     if (eventSink != null) {
-      if (curIndex == index && curIndex != Heap.getRoot()) {
-        eventSink.onBubbleUpEventBeforeSwap(curIndex, Heap.getParent(curIndex));
-        eventSink.onBubbleUpEventAfterSwap(curIndex, Heap.getParent(curIndex));
+      if (curIndex == index) {
+        eventSink.onBubbleUpEventNoChange(curIndex);
       }
     }
     return curIndex;
@@ -144,8 +146,8 @@ public class Heap<T extends Comparable<T>> implements IHeap<T> {
           eventSink.onBubbleDownEventBeforeSwap(smallestIndex, curIndex);
         }
         Collections.swap(heap, smallestIndex, curIndex);
-        if (eventSink != null && curIndex != Heap.getRoot()) {
-          eventSink.onBubbleDownEventAfterSwap(curIndex, Heap.getParent(curIndex));
+        if (eventSink != null) {
+          eventSink.onBubbleDownEventAfterSwap(smallestIndex, curIndex);
         }
       } else {
         break;
@@ -154,16 +156,15 @@ public class Heap<T extends Comparable<T>> implements IHeap<T> {
     }
 
     if (eventSink != null) {
-      if (curIndex == index && curIndex != Heap.getRoot()) {
-        eventSink.onBubbleDownEventBeforeSwap(curIndex, Heap.getParent(curIndex));
-        eventSink.onBubbleUpEventAfterSwap(curIndex, Heap.getParent(curIndex));
+      if (curIndex == index) {
+        eventSink.onBubbleDownEventNoChange(curIndex);
       }
     }
     return curIndex;
   }
 
-  public int remove(int idx) {
-    heap.set(idx, heap.get(heap.size() - 1));
+  public T remove(int idx) {
+    T old = heap.set(idx, heap.get(heap.size() - 1));
     heap.remove(heap.size() - 1);
 
     int index = heapDown(idx);
@@ -171,7 +172,7 @@ public class Heap<T extends Comparable<T>> implements IHeap<T> {
       index = heapUp(index);
     }
 
-    return index;
+    return old;
   }
 
 

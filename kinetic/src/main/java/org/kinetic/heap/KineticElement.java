@@ -1,5 +1,6 @@
 package org.kinetic.heap;
 
+import com.google.common.annotations.VisibleForTesting;
 import java.text.DecimalFormat;
 import java.util.function.Supplier;
 import lombok.Getter;
@@ -9,6 +10,8 @@ import lombok.Setter;
 @RequiredArgsConstructor
 @Getter
 public class KineticElement implements Comparable<KineticElement> {
+
+  private final static DecimalFormat FORMATTER = new DecimalFormat("#0.00");
 
 
   private final int id;
@@ -24,9 +27,9 @@ public class KineticElement implements Comparable<KineticElement> {
   }
 
 
-  public void invalidateCertificate() {
+  public void invalidateCertificate(Heap<Certificate> certificateHeap) {
     if (certificate != null) {
-      certificate.setValid(false);
+      certificateHeap.remove(certificate.getOwnIdx());
       certificate = null;
     }
   }
@@ -42,10 +45,19 @@ public class KineticElement implements Comparable<KineticElement> {
 
   @Override
   public int compareTo(KineticElement other) {
-    double thisPriority = getPriority();
-    double otherPriority = other.getPriority();
+    return Double.compare(getPriority(), other.getPriority());
+  }
 
-    return Double.compare(thisPriority, otherPriority);
+
+  @Override
+  public String toString() {
+    return "[" + id + "] " + "P" + timeSupplier.get() + ": " + getPriority() + ", R:"
+        + FORMATTER.format(getRate()) + ", C: " + (certificate != null ? certificate : "N/A");
+  }
+
+  @VisibleForTesting
+  public String toRow() {
+    return id + "," + rate + "," + initialPriority;
   }
 
 

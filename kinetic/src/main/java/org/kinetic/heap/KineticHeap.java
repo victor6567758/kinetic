@@ -1,18 +1,96 @@
 package org.kinetic.heap;
 
-import java.util.Collections;
+import com.google.common.annotations.VisibleForTesting;
 import java.util.List;
 import lombok.Getter;
 
-public class KineticHeap implements IKineticHeap, IEventSink {
+public class KineticHeap implements IKineticHeap {
 
   @Getter
-  private final Heap<KineticElement> heap = new Heap<>(this);
+  private final Heap<KineticElement> heap = new Heap<>(new HeapEventSink());
 
-  private final Heap<Certificate> certificates = new Heap<>(null);
+  @Getter
+  private final Heap<Certificate> certificates = new Heap<>(new CertificateEventSink());
+
+  private int prevTime;
 
   private int curTime;
 
+
+  private class CertificateEventSink implements IEventSink {
+
+    @Override
+    public void onBubbleUpEventBeforeSwap(int idx, int parentIdx) {
+
+    }
+
+    @Override
+    public void onBubbleUpEventAfterSwap(int idx, int parentIdx) {
+      setCertificateIndex(idx);
+      setCertificateIndex(parentIdx);
+    }
+
+
+    @Override
+    public void onBubbleDownEventBeforeSwap(int idx, int parentIdx) {
+
+    }
+
+    @Override
+    public void onBubbleDownEventAfterSwap(int idx, int parentIdx) {
+      setCertificateIndex(idx);
+      setCertificateIndex(parentIdx);
+    }
+
+    @Override
+    public void onBubbleUpEventNoChange(int idx) {
+      setCertificateIndex(idx);
+    }
+
+    @Override
+    public void onBubbleDownEventNoChange(int idx) {
+      setCertificateIndex(idx);
+    }
+  }
+
+
+  private class HeapEventSink implements IEventSink {
+
+    @Override
+    public void onBubbleUpEventBeforeSwap(int idx, int parentIdx) {
+      //invalidateCertificates(idx);
+    }
+
+    @Override
+    public void onBubbleUpEventAfterSwap(int idx, int parentIdx) {
+      //insertCertificates(idx);
+    }
+
+
+    @Override
+    public void onBubbleDownEventBeforeSwap(int idx, int parentIdx) {
+      //invalidateCertificates(idx);
+    }
+
+    @Override
+    public void onBubbleDownEventAfterSwap(int idx, int parentIdx) {
+      //insertCertificates(idx);
+    }
+
+    @Override
+    public void onBubbleUpEventNoChange(int idx) {
+      //invalidateCertificates(idx);
+      //insertCertificates(idx);
+    }
+
+    @Override
+    public void onBubbleDownEventNoChange(int idx) {
+      //invalidateCertificates(idx);
+      //insertCertificates(idx);
+    }
+
+
+  }
 
   @Override
   public KineticElement extractMin() {
@@ -45,56 +123,69 @@ public class KineticHeap implements IKineticHeap, IEventSink {
     if (nextTime <= curTime) {
       return;
     }
+
+    prevTime = curTime;
     curTime = nextTime;
 
     while (true) {
 
-      while (certificates.getMin() != null && !certificates.getMin().isValid()) {
-        certificates.extractMin();
-      }
-
       Certificate minCertificate = certificates.getMin();
-      if (minCertificate == null || certificates.getMin().getExpirationTime() >= curTime) {
+      if (minCertificate == null || certificates.getMin().getExpirationTime() > nextTime) {
         break;
       }
 
       // remove the current
-      Certificate certificate = certificates.extractMin();
+      Certificate certificate = certificates.getMin();
 
-      int certElemIdx = certificate.getElementIdx();
-      KineticElement kineticElement = heap.getHeapList().get(certElemIdx);
+      if (certificate.getOwnIdx() == -1) {
+        throw new IllegalArgumentException();
+      }
+
+      int elemIdx = certificate.getElementIdx();
+
+      // 1 invalidate certificates
+      invalidateCertificates(elemIdx);
+
+      // 2 swap
+
+      // 3
+
+//      curTime = prevTime;
+//      KineticElement old = heap.remove(elemIdx);
+//
+//      curTime = nextTime;
+//      heap.insert(old);
 
 
-//      invalidateCertificates(certElemIdx);
-//      Collections.swap(heap.getHeapList(), certElemIdx, Heap.getParent(certElemIdx));
-//      insertCertificates(certElemIdx);
-
-      heap.remove(certElemIdx);
-      heap.insert(kineticElement);
+//      int moveIndex = heap.heapDown(elemIdx);
+//      if (moveIndex == elemIdx && moveIndex < heap.size()) {
+//        moveIndex = heap.heapUp(moveIndex);
+//      }
 
     }
   }
 
+
   private void invalidateCertificates(int idx) {
-    int parentElemIdx = Heap.getParent(idx);
-    List<KineticElement> mainHeapArray = heap.getHeapList();
+    // no kinetic elements, so do not care about the time
+    List<KineticElement> heapList = heap.getHeapList();
 
-    mainHeapArray.get(parentElemIdx).invalidateCertificate();
-
-    // up to 5 certificates need to be invalidated
     if (idx < heap.size()) {
-      mainHeapArray.get(idx).invalidateCertificate();
+      heapList.get(idx).invalidateCertificate(certificates);
     }
 
-    int siblingCertIdx = Heap.getSibling(idx);
-    if (siblingCertIdx < heap.size()) {
-      mainHeapArray.get(siblingCertIdx).invalidateCertificate();
-      int leftIdx = Heap.getLeftChild(idx);
-      if (leftIdx < heap.size()) {
-        mainHeapArray.get(leftIdx).invalidateCertificate();
-        int rightIdx = Heap.getRightChild(idx);
-        if (rightIdx < heap.size()) {
-          mainHeapArray.get(rightIdx).invalidateCertificate();
+    if (idx != Heap.getRoot()) {
+      heapList.get(Heap.getParent(idx)).invalidateCertificate(certificates);
+      int siblingCertIdx = Heap.getSibling(idx);
+      if (siblingCertIdx < heap.size()) {
+        heapList.get(siblingCertIdx).invalidateCertificate(certificates);
+        int leftIdx = Heap.getLeftChild(idx);
+        if (leftIdx < heap.size()) {
+          heapList.get(leftIdx).invalidateCertificate(certificates);
+          int rightIdx = Heap.getRightChild(idx);
+          if (rightIdx < heap.size()) {
+            heapList.get(rightIdx).invalidateCertificate(certificates);
+          }
         }
       }
     }
@@ -102,21 +193,24 @@ public class KineticHeap implements IKineticHeap, IEventSink {
   }
 
   private void insertCertificates(int idx) {
-    int parentElemIdx = Heap.getParent(idx);
-    createAndMaybeAddCertificate(parentElemIdx, curTime);
+
+    // must be new time
     if (idx < heap.size()) {
       createAndMaybeAddCertificate(idx, curTime);
     }
 
-    int siblingCertIdx = Heap.getSibling(idx);
-    if (siblingCertIdx < heap.size()) {
-      createAndMaybeAddCertificate(siblingCertIdx, curTime);
-      int leftIdx = Heap.getLeftChild(idx);
-      if (leftIdx < heap.size()) {
-        createAndMaybeAddCertificate(leftIdx, curTime);
-        int rightIdx = Heap.getRightChild(idx);
-        if (rightIdx < heap.size()) {
-          createAndMaybeAddCertificate(rightIdx, idx);
+    if (idx != Heap.getRoot()) {
+      createAndMaybeAddCertificate(Heap.getParent(idx), curTime);
+      int siblingCertIdx = Heap.getSibling(idx);
+      if (siblingCertIdx < heap.size()) {
+        createAndMaybeAddCertificate(siblingCertIdx, curTime);
+        int leftIdx = Heap.getLeftChild(idx);
+        if (leftIdx < heap.size()) {
+          createAndMaybeAddCertificate(leftIdx, curTime);
+          int rightIdx = Heap.getRightChild(idx);
+          if (rightIdx < heap.size()) {
+            createAndMaybeAddCertificate(rightIdx, curTime);
+          }
         }
       }
     }
@@ -138,33 +232,23 @@ public class KineticHeap implements IKineticHeap, IEventSink {
     KineticElement parentElement = heap.getHeapList().get(parentIdx);
 
     double intersection = thisElement.getIntersectionTime(parentElement);
-
     if (intersection > newTime
         || intersection == newTime && thisElement.getRate() < parentElement.getRate()) {
       Certificate certificate = new Certificate(idx, intersection);
       thisElement.setCertificate(certificate);
       certificates.insert(certificate);
+
     }
 
   }
 
-  @Override
-  public void onBubbleUpEventBeforeSwap(int childIdx, int parentIdx) {
-    invalidateCertificates(childIdx);
+
+  private void setCertificateIndex(int idx) {
+    if (idx < certificates.size()) {
+      Certificate certificate = certificates.getHeapList().get(idx);
+      certificate.setOwnIdx(idx);
+    }
   }
 
-  @Override
-  public void onBubbleUpEventAfterSwap(int childIdx, int parentIdx) {
-    insertCertificates(childIdx);
-  }
 
-  @Override
-  public void onBubbleDownEventBeforeSwap(int childIdx, int parentIdx) {
-    invalidateCertificates(childIdx);
-  }
-
-  @Override
-  public void onBubbleDownEventAfterSwap(int childIdx, int parentIdx) {
-    insertCertificates(childIdx);
-  }
 }

@@ -2,11 +2,15 @@ package org.kinetic.heap;
 
 public interface IEventSink {
 
-  void onBubbleUpEventBeforeSwap(int childIdx, int parentIdx);
+  void onBubbleUpEventBeforeSwap(int idx, int parentIdx);
 
-  void onBubbleUpEventAfterSwap(int childIdx, int parentIdx);
+  void onBubbleUpEventAfterSwap(int idx, int parentIdx);
 
-  void onBubbleDownEventBeforeSwap(int childIdx, int parentIdx);
+  void onBubbleUpEventNoChange(int idx);
 
-  void onBubbleDownEventAfterSwap(int childIdx, int parentIdx);
+  void onBubbleDownEventBeforeSwap(int idx, int parentIdx);
+
+  void onBubbleDownEventAfterSwap(int idx, int parentIdx);
+
+  void onBubbleDownEventNoChange(int idx);
 }
