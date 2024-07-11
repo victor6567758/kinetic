@@ -16,9 +16,10 @@ public class Heap<T extends Comparable<T>> implements IHeap<T> {
 
   private final List<T> heap = new ArrayList<>();
 
-  @Setter
   @VisibleForTesting
+  @Setter
   private IEventSink eventSink;
+
 
   @Override
   public void clear() {
@@ -101,8 +102,8 @@ public class Heap<T extends Comparable<T>> implements IHeap<T> {
 
   public int heapUp(int index) {
     int curIndex = index;
-    while (curIndex > getRoot()) {
-      int parentIndex = getParent(curIndex);
+    while (curIndex > Heap.getRoot()) {
+      int parentIndex = Heap.getParent(curIndex);
       if (getValue(curIndex).compareTo(getValue(parentIndex)) < 0) {
         if (eventSink != null) {
           eventSink.onBubbleUpEventBeforeSwap(curIndex, parentIndex);

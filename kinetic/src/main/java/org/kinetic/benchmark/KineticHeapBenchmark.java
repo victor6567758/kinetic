@@ -45,7 +45,7 @@ public class KineticHeapBenchmark {
   @State(Scope.Thread)
   public static class MyState {
 
-    @Param({"10", "100", "1000", "10000", "100000"})
+    @Param({"10", "100", "1000", "10000"})
     private int n;
 
 
@@ -53,8 +53,10 @@ public class KineticHeapBenchmark {
     private int maxTimeSteps;
 
     private List<KineticElement> data;
+
     private IKineticHeap kineticHeapInserts;
     private IKineticHeap kineticHeapRemoves;
+
     private IKineticHeap heapInserts;
     private IKineticHeap heapRemoves;
 
@@ -87,6 +89,11 @@ public class KineticHeapBenchmark {
       System.out.println("Do Setup: Time step duration: " + timeStepDuration);
     }
 
+    @Setup(Level.Trial)
+    public void doTearDown() {
+      System.out.println("Tear Down");
+    }
+
     private List<KineticElement> createData() {
       List<KineticElement> kineticElements = new ArrayList<>();
 
@@ -109,6 +116,13 @@ public class KineticHeapBenchmark {
     }
   }
 
+    @Benchmark
+  public void trivialHeapInserts(MyState state, Blackhole bh) {
+    for (KineticElement element : state.data) {
+      state.heapInserts.insert(element);
+    }
+  }
+
   @Benchmark
   public void kineticHeapRemoves(MyState state, Blackhole bh) {
     while (true) {
@@ -116,13 +130,6 @@ public class KineticHeapBenchmark {
       if (element == null) {
         break;
       }
-    }
-  }
-
-  @Benchmark
-  public void trivialHeapInserts(MyState state, Blackhole bh) {
-    for (KineticElement element : state.data) {
-      state.heapInserts.insert(element);
     }
   }
 
@@ -136,30 +143,34 @@ public class KineticHeapBenchmark {
     }
   }
 
-  @Benchmark
-  public void trivialHeapAddTimeForward(MyState state, Blackhole bh) {
-    state.data.forEach(e -> {
-      state.heapInserts.insert(e);
-    });
 
-    int t = 0;
-    while (t <= state.lastTime) {
-      state.heapInserts.fastForward(t);
-      t += state.timeStepDuration;
-    }
-  }
+//
 
-  @Benchmark
-  public void kineticHeapAddTimeForward(MyState state, Blackhole bh) {
-    state.data.forEach(e -> {
-      state.kineticHeapInserts.insert(e);
-    });
 
-    int t = 0;
-    while (t <= state.lastTime) {
-      state.kineticHeapInserts.fastForward(t);
-      t += state.timeStepDuration;
-    }
-  }
+//  @Benchmark
+//  public void trivialHeapAddTimeForward(MyState state, Blackhole bh) {
+//    state.data.forEach(e -> {
+//      state.heapInserts.insert(e);
+//    });
+//
+//    int t = 0;
+//    while (t <= state.lastTime) {
+//      state.heapInserts.fastForward(t);
+//      t += state.timeStepDuration;
+//    }
+//  }
+//
+//  @Benchmark
+//  public void kineticHeapAddTimeForward(MyState state, Blackhole bh) {
+//    state.data.forEach(e -> {
+//      state.kineticHeapInserts.insert(e);
+//    });
+//
+//    int t = 0;
+//    while (t <= state.lastTime) {
+//      state.kineticHeapInserts.fastForward(t);
+//      t += state.timeStepDuration;
+//    }
+//  }
 
 }

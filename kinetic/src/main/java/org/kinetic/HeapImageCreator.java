@@ -49,7 +49,7 @@ public class HeapImageCreator {
     KineticElement kineticElement = kineticHeap.getHeap().getHeapList().get(index);
 
     String textId = String.valueOf(kineticHeap.getHeap().getHeapList().get(index));
-    return node(textId).with(Label.html("<b>" + kineticElement.getId() + " ( RATE: " +FORMATTER.format(kineticElement.getRate()) + ")</b><br/>" +
+    return node(textId).with(Label.html("<b>" + kineticElement.getId() + " ( R: " +FORMATTER.format(kineticElement.getRate()) + ")</b><br/>" +
         "[P0: " + FORMATTER.format(kineticElement.getInitialPriority()) + "]<br/>" +
         "[P" + kineticHeap.getCurTime() + ": " + FORMATTER.format(kineticElement.getPriority()) + "]<br/>" +
         certToString(kineticHeap.getHeap(), kineticElement.getCertificate())
