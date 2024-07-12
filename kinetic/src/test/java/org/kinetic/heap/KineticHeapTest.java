@@ -10,21 +10,22 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.IntStream;
 import org.apache.commons.io.FilenameUtils;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.kinetic.HeapImageCreator;
 import org.kinetic.Utils;
 
 
 class KineticHeapTest {
+
+  private static final int BULK_INSERT_NUM = 1_000_000;
+  private static final int BIG_STEPS_NUM = 10_000;
+  private static final int BIG_STEPS_STEPS = 1000;
 
   private KineticHeap kineticHeap;
 
@@ -131,12 +132,14 @@ class KineticHeapTest {
   @ValueSource(strings = {
       "scenario1.csv",
       "scenario2.csv",
-      "scenario3.csv"
+      "scenario3.csv",
+      "scenario4.csv"
   })
   public void testScenariosMoveTime(String file) throws IOException, CsvValidationException {
 
     String dirName = FilenameUtils.getBaseName(file);
-    HeapImageCreator heapImageCreator = new HeapImageCreator(kineticHeap, new File("testExample", dirName).getPath());
+    HeapImageCreator heapImageCreator = new HeapImageCreator(kineticHeap,
+        new File("testExample", dirName).getPath());
     List<KineticElement> list = readResourceData(file);
 
     list.forEach(e -> {
@@ -159,7 +162,7 @@ class KineticHeapTest {
     int t = 0;
     while (t + 1 <= maxIntersectionTime) {
       kineticHeap.fastForward(t);
-      heapImageCreator.process(t);
+      //heapImageCreator.process(t);
 
       assertCertificatesMatchElements(kineticHeap);
       assertElementsCorrect(kineticHeap);
@@ -171,24 +174,22 @@ class KineticHeapTest {
   }
 
 
-
   @Test
   public void kineticHeapAddTimeForwardBigSteps() {
     List<KineticElement> kineticElements = new ArrayList<>();
 
-    for (int id = 1; id <= 10000; id++) {
+    for (int id = 1; id <= BIG_STEPS_NUM; id++) {
       KineticElement kineticElement = new KineticElement(id,
           ThreadLocalRandom.current().nextDouble(0.0, 10.0),
           ThreadLocalRandom.current().nextDouble(0.5, 2.0), () -> kineticHeap.getCurTime());
 
-      //System.out.println(kineticElement.toRow());
       kineticElements.add(kineticElement);
     }
 
     List<KineticElement[]> pairs = Utils.kineticElementsPermutations(kineticElements);
     double lastTime = (int) pairs.stream().map(p -> p[0].getIntersectionTime(p[1]))
         .filter(p -> p >= 0).mapToDouble(x -> x).max().orElse(-1.0);
-    int timeStepDuration = (int)lastTime / 1000;
+    int timeStepDuration = (int) lastTime / BIG_STEPS_STEPS;
     if (timeStepDuration == 0) {
       timeStepDuration = 1;
     }
@@ -204,6 +205,24 @@ class KineticHeapTest {
 
       t += timeStepDuration;
     }
+  }
+
+  @Test
+  public void testBulkInserts() {
+    List<KineticElement> kineticElements = new ArrayList<>();
+
+    for (int id = 1; id <= BULK_INSERT_NUM; id++) {
+      kineticElements.add(
+          new KineticElement(id, ThreadLocalRandom.current().nextDouble(0.0, 10.0),
+              ThreadLocalRandom.current().nextDouble(0.5, 2.0),
+              () -> kineticHeap.getCurTime()));
+    }
+
+    for (KineticElement element : kineticElements) {
+      kineticHeap.insert(element);
+
+    }
+    assertElementsCorrect(kineticHeap);
   }
 
   private void assertElementsCorrect(KineticHeap heap) {

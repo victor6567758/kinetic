@@ -6,6 +6,7 @@ import java.util.function.Supplier;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
+import lombok.SneakyThrows;
 
 @RequiredArgsConstructor
 @Getter
@@ -61,4 +62,8 @@ public class KineticElement implements Comparable<KineticElement> {
   }
 
 
+
+  public KineticElement createCopy(Supplier<Integer> timeSupplier) {
+    return new KineticElement(id, rate, initialPriority, timeSupplier);
+  }
 }

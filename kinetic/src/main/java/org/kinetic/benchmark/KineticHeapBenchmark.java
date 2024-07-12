@@ -13,12 +13,16 @@ import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.BenchmarkMode;
 import org.openjdk.jmh.annotations.Fork;
 import org.openjdk.jmh.annotations.Level;
+import org.openjdk.jmh.annotations.Measurement;
 import org.openjdk.jmh.annotations.Mode;
 import org.openjdk.jmh.annotations.OutputTimeUnit;
 import org.openjdk.jmh.annotations.Param;
 import org.openjdk.jmh.annotations.Scope;
 import org.openjdk.jmh.annotations.Setup;
 import org.openjdk.jmh.annotations.State;
+import org.openjdk.jmh.annotations.TearDown;
+import org.openjdk.jmh.annotations.Threads;
+import org.openjdk.jmh.annotations.Warmup;
 import org.openjdk.jmh.infra.Blackhole;
 import org.openjdk.jmh.runner.Runner;
 import org.openjdk.jmh.runner.RunnerException;
@@ -27,32 +31,24 @@ import org.openjdk.jmh.runner.options.OptionsBuilder;
 
 @BenchmarkMode(Mode.SingleShotTime)
 @OutputTimeUnit(TimeUnit.MILLISECONDS)
-@State(Scope.Benchmark)
-@Fork(value = 2, jvmArgs = {"-Xms20G", "-Xmx20G"})
+@Fork(value = 1, jvmArgs = {"-Xms15G", "-Xmx15G"})
+@Threads(value = 1)
+@Warmup(iterations = 0)
+@Measurement(iterations = 1)
 public class KineticHeapBenchmark {
 
 
-  public static void main(String[] args) throws RunnerException {
-
-    Options opt = new OptionsBuilder()
-        .include(KineticHeapBenchmark.class.getSimpleName())
-        .forks(1)
-        .build();
-
-    new Runner(opt).run();
-  }
 
   @State(Scope.Thread)
-  public static class MyState {
-
-    @Param({"10", "100", "1000", "10000"})
+  public static class StateHolder {
+    @Param({"10", "100", "1000", "10000", "100000"})
     private int n;
 
 
     @Param({"100"})
     private int maxTimeSteps;
 
-    private List<KineticElement> data;
+    private List<KineticElement> initialData;
 
     private IKineticHeap kineticHeapInserts;
     private IKineticHeap kineticHeapRemoves;
@@ -63,19 +59,22 @@ public class KineticHeapBenchmark {
     private int lastTime;
     private int timeStepDuration;
 
-    @Setup(Level.Trial)
+
+    @Setup(Level.Invocation)
     public void doSetup() {
-      data = createData();
       kineticHeapRemoves = new KineticHeap();
-      kineticHeapInserts = new KineticHeap();
-      heapInserts = new KineticHeapTrivial();
       heapRemoves = new KineticHeapTrivial();
 
-      data.forEach(x -> kineticHeapRemoves.insert(x));
-      data.forEach(x -> heapRemoves.insert(x));
+      kineticHeapInserts = new KineticHeap();
+      heapInserts = new KineticHeapTrivial();
 
-      List<KineticElement[]> pairs = Utils.kineticElementsPermutations(data);
-      lastTime = (int)pairs.stream().map(p -> p[0].getIntersectionTime(p[1]))
+      initialData = createKineticInsertsData();
+
+      initialData.forEach(x -> kineticHeapRemoves.insert(x.createCopy(() -> kineticHeapRemoves.getCurTime())));
+      initialData.forEach(x -> heapRemoves.insert(x.createCopy(() -> -1)));
+
+      List<KineticElement[]> pairs = Utils.kineticElementsPermutations(initialData);
+      lastTime = (int) pairs.stream().map(p -> p[0].getIntersectionTime(p[1]))
           .filter(p -> p >= 0).mapToDouble(x -> x).max().orElse(-1.0);
 
       timeStepDuration = lastTime / maxTimeSteps;
@@ -83,18 +82,13 @@ public class KineticHeapBenchmark {
         timeStepDuration = 1;
       }
 
-      System.out.println("Do Setup: heap for removal size: " + heapRemoves.size());
-      System.out.println("Do Setup: kinetic heap for removal size: " + kineticHeapRemoves.size());
-      System.out.println("Do Setup: last time detected: " + lastTime);
-      System.out.println("Do Setup: Time step duration: " + timeStepDuration);
     }
 
-    @Setup(Level.Trial)
+    @TearDown(Level.Trial)
     public void doTearDown() {
-      System.out.println("Tear Down");
     }
 
-    private List<KineticElement> createData() {
+    private List<KineticElement> createKineticInsertsData() {
       List<KineticElement> kineticElements = new ArrayList<>();
 
       for (int id = 1; id <= n; id++) {
@@ -107,70 +101,88 @@ public class KineticHeapBenchmark {
       return kineticElements;
     }
 
+
+  }
+
+  public static void main(String[] args) throws RunnerException {
+
+    Options opt = new OptionsBuilder()
+        .include(KineticHeapBenchmark.class.getSimpleName())
+        .build();
+
+    new Runner(opt).run();
+  }
+
+
+
+  @Benchmark
+  public int kineticHeapInserts(StateHolder stateHolder,  Blackhole bh) {
+
+    for (KineticElement element : stateHolder.initialData) {
+      stateHolder.kineticHeapInserts.insert(element);
+    }
+    return stateHolder.kineticHeapInserts.size();
   }
 
   @Benchmark
-  public void kineticHeapInserts(MyState state, Blackhole bh) {
-    for (KineticElement element : state.data) {
-      state.kineticHeapInserts.insert(element);
+  public int trivialHeapInserts(StateHolder stateHolder, Blackhole bh) {
+    for (KineticElement element : stateHolder.initialData) {
+      stateHolder.heapInserts.insert(element);
     }
-  }
-
-    @Benchmark
-  public void trivialHeapInserts(MyState state, Blackhole bh) {
-    for (KineticElement element : state.data) {
-      state.heapInserts.insert(element);
-    }
+    return stateHolder.kineticHeapInserts.size();
   }
 
   @Benchmark
-  public void kineticHeapRemoves(MyState state, Blackhole bh) {
+  public int kineticHeapRemoves(StateHolder stateHolder, Blackhole bh) {
     while (true) {
-      KineticElement element = state.kineticHeapRemoves.extractMin();
+      KineticElement element = stateHolder.kineticHeapRemoves.extractMin();
       if (element == null) {
         break;
       }
     }
+    return stateHolder.kineticHeapRemoves.size();
   }
 
   @Benchmark
-  public void trivialHeapRemoves(MyState state, Blackhole bh) {
+  public int trivialHeapRemoves(StateHolder stateHolder, Blackhole bh) {
     while (true) {
-      KineticElement element = state.heapRemoves.extractMin();
+      KineticElement element = stateHolder.heapRemoves.extractMin();
       if (element == null) {
         break;
       }
     }
+    return stateHolder.heapRemoves.size();
   }
 
 
-//
+
+  @Benchmark
+  public void trivialHeapAddTimeForward(StateHolder stateHolder, Blackhole bh) {
+    stateHolder.initialData.forEach(e -> {
+      stateHolder.heapInserts.insert(e);
+    });
+
+    int t = 0;
+    while (t <= stateHolder.lastTime) {
+      stateHolder.heapInserts.fastForward(t);
+      t += stateHolder.timeStepDuration;
+    }
+  }
+
+  @Benchmark
+  public void kineticHeapAddTimeForward(StateHolder stateHolder, Blackhole bh) {
+    stateHolder.initialData.forEach(e -> {
+      stateHolder.kineticHeapInserts.insert(e);
+    });
+
+    int t = 0;
+    while (t <= stateHolder.lastTime) {
+      stateHolder.kineticHeapInserts.fastForward(t);
+      t += stateHolder.timeStepDuration;
+    }
+  }
 
 
-//  @Benchmark
-//  public void trivialHeapAddTimeForward(MyState state, Blackhole bh) {
-//    state.data.forEach(e -> {
-//      state.heapInserts.insert(e);
-//    });
-//
-//    int t = 0;
-//    while (t <= state.lastTime) {
-//      state.heapInserts.fastForward(t);
-//      t += state.timeStepDuration;
-//    }
-//  }
-//
-//  @Benchmark
-//  public void kineticHeapAddTimeForward(MyState state, Blackhole bh) {
-//    state.data.forEach(e -> {
-//      state.kineticHeapInserts.insert(e);
-//    });
-//
-//    int t = 0;
-//    while (t <= state.lastTime) {
-//      state.kineticHeapInserts.fastForward(t);
-//      t += state.timeStepDuration;
-//    }
-//  }
+
 
 }

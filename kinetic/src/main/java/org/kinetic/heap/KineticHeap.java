@@ -72,7 +72,6 @@ public class KineticHeap implements IKineticHeap {
     if (minElement != null) {
       int lastIdx = heap.getHeapList().size() - 1;
 
-      // remove certificate from the last
       heap.getHeapList().get(lastIdx).invalidateCertificate(certificates);
       KineticElement old = heap.getHeapList().set(0, heap.getHeapList().get(lastIdx));
       heap.remove(heap.size() - 1);
@@ -81,7 +80,7 @@ public class KineticHeap implements IKineticHeap {
       return old;
     }
 
-    return minElement;
+    return null;
   }
 
   @Override
@@ -135,16 +134,6 @@ public class KineticHeap implements IKineticHeap {
       // 3
       insertCertificates(elemIdx, certificate.getExpirationTime());
 
-//      curTime = prevTime;
-//      KineticElement old = heap.remove(elemIdx);
-//
-//      curTime = nextTime;
-//      heap.insert(old);
-
-//      int moveIndex = heap.heapDown(elemIdx);
-//      if (moveIndex == elemIdx && moveIndex < heap.size()) {
-//        moveIndex = heap.heapUp(moveIndex);
-//      }
 
     }
   }
@@ -277,8 +266,8 @@ public class KineticHeap implements IKineticHeap {
         /*|| intersection == newTime && thisElement.getRate() < parentElement.getRate() */) {
       Certificate certificate = new Certificate(idx, intersection);
       thisElement.setCertificate(certificate);
-      certificates.insert(certificate);
 
+      certificates.insert(certificate);
     }
 
   }
