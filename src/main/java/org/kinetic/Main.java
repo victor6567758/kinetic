@@ -13,7 +13,7 @@ public class Main {
   public static void main(String[] args) throws IOException {
     KineticHeap kineticHeap = new KineticHeap();
 
-    List<KineticElement> elements = prepareKineticElements2(kineticHeap);
+    List<KineticElement> elements = prepareKineticElements(kineticHeap);
     for (KineticElement element : elements) {
       kineticHeap.insert(element);
     }
@@ -35,20 +35,9 @@ public class Main {
 
   }
 
+
+
   private static List<KineticElement> prepareKineticElements(KineticHeap heap) {
-    return Arrays.asList(
-        //new KineticElement(1, 1.0, 1.8, heap),
-        new KineticElement(3, 20, 0.5, heap::getCurTime),
-        new KineticElement(2, 3.0, 1.5, heap::getCurTime),
-        new KineticElement(1, 2.0, 1.6, heap::getCurTime)
-        //new KineticElement(4, 4.0, 1.4, heap),
-        //new KineticElement(5, 5.0, 1.2, heap)
-    );
-
-  }
-
-
-  private static List<KineticElement> prepareKineticElements2(KineticHeap heap) {
     List<KineticElement> result = Arrays.asList(
         new KineticElement(1, 1.0, 1.8, heap::getCurTime),
         new KineticElement(2, 2.0, 1.6, heap::getCurTime),
