@@ -154,15 +154,13 @@ class KineticHeapTest {
       assertCertificatesMatchElements(kineticHeap);
     });
 
-    List<KineticElement[]> pairs = Utils.kineticElementsPermutations(
-        kineticHeap.getHeap().getHeapList());
-    double maxIntersectionTime = pairs.stream().map(p -> p[0].getIntersectionTime(p[1]))
-        .filter(p -> p >= 0).mapToDouble(x -> x).max().orElse(-1.0);
+
+    double maxIntersectionTime = Utils.maxTimeForPermutations(kineticHeap.getHeap().getHeapList());
 
     int t = 0;
     while (t + 1 <= maxIntersectionTime) {
       kineticHeap.fastForward(t);
-      //heapImageCreator.process(t);
+      heapImageCreator.process(t);
 
       assertCertificatesMatchElements(kineticHeap);
       assertElementsCorrect(kineticHeap);
@@ -186,9 +184,7 @@ class KineticHeapTest {
       kineticElements.add(kineticElement);
     }
 
-    List<KineticElement[]> pairs = Utils.kineticElementsPermutations(kineticElements);
-    double lastTime = (int) pairs.stream().map(p -> p[0].getIntersectionTime(p[1]))
-        .filter(p -> p >= 0).mapToDouble(x -> x).max().orElse(-1.0);
+    double lastTime = Utils.maxTimeForPermutations(kineticElements);
     int timeStepDuration = (int) lastTime / BIG_STEPS_STEPS;
     if (timeStepDuration == 0) {
       timeStepDuration = 1;

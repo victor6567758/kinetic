@@ -31,9 +31,9 @@ import org.openjdk.jmh.runner.options.OptionsBuilder;
 
 @BenchmarkMode(Mode.SingleShotTime)
 @OutputTimeUnit(TimeUnit.MILLISECONDS)
-@Fork(value = 1, jvmArgs = {"-Xms15G", "-Xmx15G"})
+@Fork(value = 1, jvmArgs = {"-Xms10G", "-Xmx10G"})
 @Threads(value = 1)
-@Warmup(iterations = 0)
+@Warmup(iterations = 1)
 @Measurement(iterations = 1)
 public class KineticHeapBenchmark {
 
@@ -41,7 +41,7 @@ public class KineticHeapBenchmark {
 
   @State(Scope.Thread)
   public static class StateHolder {
-    @Param({"10", "100", "1000", "10000", "100000"})
+    @Param({"10", "100", "1000", "10000"})
     private int n;
 
 
@@ -73,9 +73,7 @@ public class KineticHeapBenchmark {
       initialData.forEach(x -> kineticHeapRemoves.insert(x.createCopy(() -> kineticHeapRemoves.getCurTime())));
       initialData.forEach(x -> heapRemoves.insert(x.createCopy(() -> -1)));
 
-      List<KineticElement[]> pairs = Utils.kineticElementsPermutations(initialData);
-      lastTime = (int) pairs.stream().map(p -> p[0].getIntersectionTime(p[1]))
-          .filter(p -> p >= 0).mapToDouble(x -> x).max().orElse(-1.0);
+      lastTime = (int)Utils.maxTimeForPermutations(initialData);
 
       timeStepDuration = lastTime / maxTimeSteps;
       if (timeStepDuration == 0) {

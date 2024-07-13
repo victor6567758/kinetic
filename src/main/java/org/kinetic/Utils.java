@@ -8,19 +8,23 @@ import org.kinetic.heap.KineticElement;
 @UtilityClass
 public class Utils {
 
-  public static List<KineticElement[]> kineticElementsPermutations(List<KineticElement> elements) {
-    List<KineticElement[]> permutations = new ArrayList<>();
-    int size = elements.size();
 
-    for (int i = 0; i < size; i++) {
-      for (int j = 0; j < size; j++) {
+  public static double maxTimeForPermutations(List<KineticElement> elements) {
+
+    double maxTime = -1;
+    for (int i = 0; i < elements.size(); i++) {
+      for (int j = 0; j < elements.size(); j++) {
         if (i != j) {
-          permutations.add(new KineticElement[]{elements.get(i), elements.get(j)});
+          double intersection = elements.get(i).getIntersectionTime(elements.get(j));
+          if (intersection >= 0) {
+            maxTime = Math.max(maxTime, intersection);
+          }
+
         }
       }
     }
 
-    return permutations;
+    return maxTime;
   }
 
 }

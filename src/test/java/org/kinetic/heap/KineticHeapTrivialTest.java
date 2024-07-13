@@ -100,9 +100,7 @@ class KineticHeapTrivialTest {
           0, kineticHeap.size() - 1)).isTrue();
     });
 
-    List<KineticElement[]> pairs = Utils.kineticElementsPermutations(kineticHeap.getHeap().getHeapList());
-    double maxIntersectionTime = pairs.stream().map(p -> p[0].getIntersectionTime(p[1]))
-        .filter(p -> p >= 0).mapToDouble(x -> x).max().orElse(-1.0);
+    double maxIntersectionTime = Utils.maxTimeForPermutations(kineticHeap.getHeap().getHeapList());
 
     int t = 0;
     while (true) {
