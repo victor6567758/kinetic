@@ -56,14 +56,9 @@ public class KineticElement implements Comparable<KineticElement> {
         + FORMATTER.format(getRate()) + ", C: " + (certificate != null ? certificate : "N/A");
   }
 
-  @VisibleForTesting
-  public String toRow() {
-    return id + "," + rate + "," + initialPriority;
-  }
-
-
-
   public KineticElement createCopy(Supplier<Integer> timeSupplier) {
     return new KineticElement(id, rate, initialPriority, timeSupplier);
   }
+
+
 }

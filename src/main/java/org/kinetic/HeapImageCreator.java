@@ -3,6 +3,7 @@ package org.kinetic;
 import static guru.nidi.graphviz.model.Factory.graph;
 import static guru.nidi.graphviz.model.Factory.node;
 
+import guru.nidi.graphviz.attribute.Font;
 import guru.nidi.graphviz.attribute.Label;
 import guru.nidi.graphviz.engine.Format;
 import guru.nidi.graphviz.engine.Graphviz;
@@ -42,17 +43,17 @@ public class HeapImageCreator {
   }
 
   private Node createNode(KineticHeap kineticHeap, int index) {
-    if (index >= kineticHeap.getHeap().size()) {
+    if (index >= kineticHeap.size()) {
       return null;
     }
 
-    KineticElement kineticElement = kineticHeap.getHeap().getHeapList().get(index);
+    KineticElement kineticElement = kineticHeap.getValue(index);
 
-    String textId = String.valueOf(kineticHeap.getHeap().getHeapList().get(index));
-    return node(textId).with(Label.html("<b>" + kineticElement.getId() + " ( R: " +FORMATTER.format(kineticElement.getRate()) + ")</b><br/>" +
+    String textId = String.valueOf(kineticHeap.getValue(index));
+    return node(textId).with(Font.size(6)).with(Label.html("<b>" + kineticElement.getId() + " ( R: " +FORMATTER.format(kineticElement.getRate()) + ")</b><br/>" +
         "[P0: " + FORMATTER.format(kineticElement.getInitialPriority()) + "]<br/>" +
         "[P" + kineticHeap.getCurTime() + ": " + FORMATTER.format(kineticElement.getPriority()) + "]<br/>" +
-        certToString(kineticHeap.getHeap(), kineticElement.getCertificate())
+        certToString(kineticElement.getCertificate())
       ));
   }
 
@@ -60,7 +61,7 @@ public class HeapImageCreator {
     if (root == null) {
       return null;
     }
-    if (index >= kineticHeap.getHeap().size()) {
+    if (index >= kineticHeap.size()) {
       return null;
     }
 
@@ -80,12 +81,12 @@ public class HeapImageCreator {
     return result;
   }
 
-  private static String certToString(Heap<KineticElement> heap, Certificate certificate) {
+  private String certToString(Certificate certificate) {
     if (certificate == null || certificate.getElementIdx() == Heap.getRoot()) {
       return "N/A";
     }
 
-    return "[" + heap.getValue(Heap.getParent(certificate.getElementIdx())).getId() + HtmlEscapers.htmlEscaper().escape("]<[") + heap.getValue(certificate.getElementIdx()).getId()
+    return "[" + kineticHeap.getValue(Heap.getParent(certificate.getElementIdx())).getId() + HtmlEscapers.htmlEscaper().escape("]<[") + kineticHeap.getValue(certificate.getElementIdx()).getId()
         + "] I: "
         + FORMATTER.format(certificate.getExpirationTime());
   }

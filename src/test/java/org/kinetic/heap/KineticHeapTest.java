@@ -155,7 +155,7 @@ class KineticHeapTest {
     });
 
 
-    double maxIntersectionTime = Utils.maxTimeForPermutations(kineticHeap.getHeap().getHeapList());
+    double maxIntersectionTime = Utils.maxTimeForPermutations(kineticHeap);
 
     int t = 0;
     while (t + 1 <= maxIntersectionTime) {
@@ -264,14 +264,12 @@ class KineticHeapTest {
   private void assertCertificatesMatchElements(KineticHeap heap) {
     Certificate[] certHeapArray = heap.getCertificates().getHeapArray(Certificate.class);
 
-    for (int i = 0; i < certHeapArray.length; i++) {
-      assertThat(certHeapArray[i].getOwnIdx()).isGreaterThanOrEqualTo(0);
-      assertThat(certHeapArray[i].getOwnIdx()).isEqualTo(i);
+    for (int i = 0; i < heap.getCertificates().size(); i++) {
+      assertThat(heap.getCertificates().getValue(i).getOwnIdx()).isEqualTo(i);
     }
 
-    List<KineticElement> elements = heap.getHeap().getHeapList();
-    for (int i = 0; i < elements.size(); i++) {
-      Certificate certificate = elements.get(i).getCertificate();
+    for (int i = 0; i < heap.getHeap().size(); i++) {
+      Certificate certificate = heap.getHeap().getValue(i).getCertificate();
       if (certificate != null) {
         assertThat(certHeapArray[certificate.getOwnIdx()].getElementIdx()).isEqualTo(i);
       }
@@ -286,12 +284,12 @@ class KineticHeapTest {
     assertThat(certificates.stream().filter(e -> e.getExpirationTime() >= t).count()).isEqualTo(
         elements.stream().filter(e -> e.getCertificate() != null).count());
 
-    for (int i = 0; i < elements.size(); i++) {
+    for (int i = 0; i < kineticHeap.getHeap().size(); i++) {
       int idx = i;
-      KineticElement element = elements.get(i);
+      KineticElement element = kineticHeap.getValue(i);
       if (element.getCertificate() != null && element.getCertificate().getExpirationTime() >= t) {
         assertThat(
-            certificates.get(element.getCertificate().getOwnIdx()).getElementIdx()).isEqualTo(idx);
+            kineticHeap.getCertificates().getValue(element.getCertificate().getOwnIdx()).getElementIdx()).isEqualTo(idx);
         assertThat(kineticHeap.getCertificates().getHeapList().stream()
             .filter(c -> c.getElementIdx() == idx).count()).isGreaterThan(0);
       }

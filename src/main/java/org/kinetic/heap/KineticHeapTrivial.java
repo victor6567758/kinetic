@@ -1,12 +1,13 @@
 package org.kinetic.heap;
 
+import com.google.common.annotations.VisibleForTesting;
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.Getter;
 
 public class KineticHeapTrivial implements IKineticHeap {
 
-  @Getter
   private final Heap<KineticElement> heap = new Heap<>(null);
 
   private int curTime;
@@ -18,12 +19,18 @@ public class KineticHeapTrivial implements IKineticHeap {
     }
     curTime = nextTime;
 
-    List<KineticElement> copy = new ArrayList<>(heap.getHeapList());
+    List<KineticElement> copy = heap.createListCopy();
     heap.clear();
     for (KineticElement element : copy) {
       heap.insert(element);
     }
 
+  }
+
+  /*package*/
+  @VisibleForTesting
+  KineticElement getValue(int idx) {
+    return heap.getValue(idx);
   }
 
   @Override
@@ -53,7 +60,6 @@ public class KineticHeapTrivial implements IKineticHeap {
 
   @Override
   public void clear() {
-    heap.clear();
     heap.clear();
   }
 }

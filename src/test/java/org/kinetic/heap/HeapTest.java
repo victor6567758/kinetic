@@ -113,49 +113,42 @@ class HeapTest {
 
   @Test
   public void testHeapWithSelfReferencedElements() {
-    Heap<HeapRefElement> selfRefHeap = new Heap<>(null);
-    IEventSink sink = new IEventSink() {
+    Heap<HeapRefElement> selfRefHeap = new Heap<>(new IEventSink<HeapRefElement>() {
 
-      Heap<HeapRefElement> pThis;
-
-      IEventSink init(Heap<HeapRefElement> heap) {
-        pThis = heap;
-        return this;
-      }
 
       @Override
-      public void onBubbleUpEventBeforeSwap(int idx, int parentIdx) {
+      public void onBubbleUpEventBeforeSwap(IHeap<HeapRefElement> heap, int idx, int parentIdx) {
 
       }
 
       @Override
-      public void onBubbleUpEventAfterSwap(int idx, int parentIdx) {
-        pThis.getHeapList().get(parentIdx).ownIdx = parentIdx;
-        pThis.getHeapList().get(idx).ownIdx = idx;
+      public void onBubbleUpEventAfterSwap(IHeap<HeapRefElement> heap, int idx, int parentIdx) {
+        ((Heap<HeapRefElement>)heap).getValue(parentIdx).ownIdx = parentIdx;
+        ((Heap<HeapRefElement>)heap).getValue(idx).ownIdx = idx;
       }
 
       @Override
-      public void onBubbleUpEventNoChange(int idx) {
-        pThis.getHeapList().get(idx).ownIdx = idx;
+      public void onBubbleUpEventNoChange(IHeap<HeapRefElement> heap, int idx) {
+        ((Heap<HeapRefElement>)heap).getValue(idx).ownIdx = idx;
       }
 
       @Override
-      public void onBubbleDownEventBeforeSwap(int idx, int parentIdx) {
+      public void onBubbleDownEventBeforeSwap(IHeap<HeapRefElement> heap, int idx, int parentIdx) {
 
       }
 
       @Override
-      public void onBubbleDownEventAfterSwap(int idx, int parentIdx) {
-        pThis.getHeapList().get(parentIdx).ownIdx = parentIdx;
-        pThis.getHeapList().get(idx).ownIdx = idx;
+      public void onBubbleDownEventAfterSwap(IHeap<HeapRefElement> heap, int idx, int parentIdx) {
+        ((Heap<HeapRefElement>)heap).getValue(parentIdx).ownIdx = parentIdx;
+        ((Heap<HeapRefElement>)heap).getValue(idx).ownIdx = idx;
       }
 
       @Override
-      public void onBubbleDownEventNoChange(int idx) {
-        pThis.getHeapList().get(idx).ownIdx = idx;
+      public void onBubbleDownEventNoChange(IHeap<HeapRefElement> heap, int idx) {
+        ((Heap<HeapRefElement>)heap).getValue(idx).ownIdx = idx;
       }
-    }.init(selfRefHeap);
-    selfRefHeap.setEventSink(sink);
+    });
+
 
     List<HeapRefElement> input = IntStream.range(1, 1000).boxed().map(HeapRefElement::new).toList();
     input.forEach(e -> {
@@ -171,49 +164,41 @@ class HeapTest {
 
   @Test
   public void testHeapWithSelfReferencedElementsRemoveAfterInserts() {
-    Heap<HeapRefElement> selfRefHeap = new Heap<>(null);
-    IEventSink sink = new IEventSink() {
+    Heap<HeapRefElement> selfRefHeap = new Heap<>(new IEventSink<HeapRefElement>() {
 
-      Heap<HeapRefElement> pThis;
-
-      IEventSink init(Heap<HeapRefElement> heap) {
-        pThis = heap;
-        return this;
-      }
 
       @Override
-      public void onBubbleUpEventBeforeSwap(int idx, int parentIdx) {
+      public void onBubbleUpEventBeforeSwap(IHeap<HeapRefElement> heap, int idx, int parentIdx) {
 
       }
 
       @Override
-      public void onBubbleUpEventAfterSwap(int idx, int parentIdx) {
-        pThis.getHeapList().get(parentIdx).ownIdx = parentIdx;
-        pThis.getHeapList().get(idx).ownIdx = idx;
+      public void onBubbleUpEventAfterSwap(IHeap<HeapRefElement> heap, int idx, int parentIdx) {
+        ((Heap<HeapRefElement>)heap).getValue(parentIdx).ownIdx = parentIdx;
+        ((Heap<HeapRefElement>)heap).getValue(idx).ownIdx = idx;
       }
 
       @Override
-      public void onBubbleUpEventNoChange(int idx) {
-        pThis.getHeapList().get(idx).ownIdx = idx;
+      public void onBubbleUpEventNoChange(IHeap<HeapRefElement> heap, int idx) {
+        ((Heap<HeapRefElement>)heap).getValue(idx).ownIdx = idx;
       }
 
       @Override
-      public void onBubbleDownEventBeforeSwap(int idx, int parentIdx) {
+      public void onBubbleDownEventBeforeSwap(IHeap<HeapRefElement> heap, int idx, int parentIdx) {
 
       }
 
       @Override
-      public void onBubbleDownEventAfterSwap(int idx, int parentIdx) {
-        pThis.getHeapList().get(parentIdx).ownIdx = parentIdx;
-        pThis.getHeapList().get(idx).ownIdx = idx;
+      public void onBubbleDownEventAfterSwap(IHeap<HeapRefElement> heap, int idx, int parentIdx) {
+        ((Heap<HeapRefElement>)heap).getValue(parentIdx).ownIdx = parentIdx;
+        ((Heap<HeapRefElement>)heap).getValue(idx).ownIdx = idx;
       }
 
       @Override
-      public void onBubbleDownEventNoChange(int idx) {
-        pThis.getHeapList().get(idx).ownIdx = idx;
+      public void onBubbleDownEventNoChange(IHeap<HeapRefElement> heap, int idx) {
+        ((Heap<HeapRefElement>)heap).getValue(idx).ownIdx = idx;
       }
-    }.init(selfRefHeap);
-    selfRefHeap.setEventSink(sink);
+    });
 
     List<HeapRefElement> input = IntStream.range(1, 1000).boxed().map(HeapRefElement::new).toList();
     for (int i = 0; i < input.size() - 1; i += 2) {
@@ -233,53 +218,46 @@ class HeapTest {
 
   @Test
   public void testHeapWithSelfReferencedElementsRemoveAfterInsertsMiddle() {
-    Heap<HeapRefElement> selfRefHeap = new Heap<>(null);
-    IEventSink sink = new IEventSink() {
+    Heap<HeapRefElement> selfRefHeap = new Heap<>(new IEventSink<HeapRefElement>() {
 
-      Heap<HeapRefElement> pThis;
-
-      IEventSink init(Heap<HeapRefElement> heap) {
-        pThis = heap;
-        return this;
-      }
 
       @Override
-      public void onBubbleUpEventBeforeSwap(int idx, int parentIdx) {
+      public void onBubbleUpEventBeforeSwap(IHeap<HeapRefElement> heap, int idx, int parentIdx) {
 
       }
 
       @Override
-      public void onBubbleUpEventAfterSwap(int idx, int parentIdx) {
-        pThis.getHeapList().get(parentIdx).ownIdx = parentIdx;
-        pThis.getHeapList().get(idx).ownIdx = idx;
+      public void onBubbleUpEventAfterSwap(IHeap<HeapRefElement> heap, int idx, int parentIdx) {
+        ((Heap<HeapRefElement>)heap).getValue(parentIdx).ownIdx = parentIdx;
+        ((Heap<HeapRefElement>)heap).getValue(idx).ownIdx = idx;
       }
 
       @Override
-      public void onBubbleUpEventNoChange(int idx) {
-        if (idx < pThis.getHeapList().size()) {
-          pThis.getHeapList().get(idx).ownIdx = idx;
+      public void onBubbleUpEventNoChange(IHeap<HeapRefElement> heap, int idx) {
+        if (idx < heap.size()) {
+          ((Heap<HeapRefElement>)heap).getValue(idx).ownIdx = idx;
         }
       }
 
       @Override
-      public void onBubbleDownEventBeforeSwap(int idx, int parentIdx) {
+      public void onBubbleDownEventBeforeSwap(IHeap<HeapRefElement> heap, int idx, int parentIdx) {
 
       }
 
       @Override
-      public void onBubbleDownEventAfterSwap(int idx, int parentIdx) {
-        pThis.getHeapList().get(parentIdx).ownIdx = parentIdx;
-        pThis.getHeapList().get(idx).ownIdx = idx;
+      public void onBubbleDownEventAfterSwap(IHeap<HeapRefElement> heap, int idx, int parentIdx) {
+        ((Heap<HeapRefElement>)heap).getValue(parentIdx).ownIdx = parentIdx;
+        ((Heap<HeapRefElement>)heap).getValue(idx).ownIdx = idx;
       }
 
       @Override
-      public void onBubbleDownEventNoChange(int idx) {
-        if (idx < pThis.getHeapList().size()) {
-          pThis.getHeapList().get(idx).ownIdx = idx;
+      public void onBubbleDownEventNoChange(IHeap<HeapRefElement> heap, int idx) {
+        if (idx < heap.size()) {
+          ((Heap<HeapRefElement>)heap).getValue(idx).ownIdx = idx;
         }
       }
-    }.init(selfRefHeap);
-    selfRefHeap.setEventSink(sink);
+    });
+
 
     List<HeapRefElement> input = IntStream.range(1, 1000).boxed().map(HeapRefElement::new).toList();
     for (int i = 0; i < input.size() - 1; i += 2) {

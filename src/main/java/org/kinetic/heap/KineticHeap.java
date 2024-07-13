@@ -1,54 +1,50 @@
 package org.kinetic.heap;
 
+import com.google.common.annotations.VisibleForTesting;
 import java.util.Collections;
 import java.util.List;
 import lombok.Getter;
 
 public class KineticHeap implements IKineticHeap {
 
-  @Getter
   private final Heap<KineticElement> heap = new Heap<>(null);
 
-  @Getter
   private final Heap<Certificate> certificates = new Heap<>(new CertificateEventSink());
-
-  private int prevTime;
 
   private int curTime;
 
-
-  private class CertificateEventSink implements IEventSink {
+  private class CertificateEventSink implements IEventSink<Certificate> {
 
     @Override
-    public void onBubbleUpEventBeforeSwap(int idx, int parentIdx) {
+    public void onBubbleUpEventBeforeSwap(IHeap<Certificate> heap, int idx, int parentIdx) {
 
     }
 
     @Override
-    public void onBubbleUpEventAfterSwap(int idx, int parentIdx) {
+    public void onBubbleUpEventAfterSwap(IHeap<Certificate> heap, int idx, int parentIdx) {
       setCertificateIndex(idx);
       setCertificateIndex(parentIdx);
     }
 
 
     @Override
-    public void onBubbleDownEventBeforeSwap(int idx, int parentIdx) {
+    public void onBubbleDownEventBeforeSwap(IHeap<Certificate> heap, int idx, int parentIdx) {
 
     }
 
     @Override
-    public void onBubbleDownEventAfterSwap(int idx, int parentIdx) {
+    public void onBubbleDownEventAfterSwap(IHeap<Certificate> heap, int idx, int parentIdx) {
       setCertificateIndex(idx);
       setCertificateIndex(parentIdx);
     }
 
     @Override
-    public void onBubbleUpEventNoChange(int idx) {
+    public void onBubbleUpEventNoChange(IHeap<Certificate> heap, int idx) {
       setCertificateIndex(idx);
     }
 
     @Override
-    public void onBubbleDownEventNoChange(int idx) {
+    public void onBubbleDownEventNoChange(IHeap<Certificate> heap, int idx) {
       setCertificateIndex(idx);
     }
   }
@@ -61,7 +57,7 @@ public class KineticHeap implements IKineticHeap {
     if (data == null) {
       throw new IllegalArgumentException("Invalid data");
     }
-    heap.getHeapList().add(data);
+    heap.appendValue(data);
     heapUp();
   }
 
@@ -70,13 +66,13 @@ public class KineticHeap implements IKineticHeap {
     KineticElement minElement = getMin();
 
     if (minElement != null) {
-      int lastIdx = heap.getHeapList().size() - 1;
+      int lastIdx = heap.size() - 1;
 
-      heap.getHeapList().get(lastIdx).invalidateCertificate(certificates);
-      KineticElement old = heap.getHeapList().set(0, heap.getHeapList().get(lastIdx));
+      heap.getValue(lastIdx).invalidateCertificate(certificates);
+      KineticElement old = heap.setValue(heap.getValue(lastIdx), 0);
       heap.remove(heap.size() - 1);
 
-      int index = heapDown();
+      heapDown();
       return old;
     }
 
@@ -106,7 +102,6 @@ public class KineticHeap implements IKineticHeap {
       return;
     }
 
-    prevTime = curTime;
     curTime = nextTime;
 
     while (true) {
@@ -116,7 +111,6 @@ public class KineticHeap implements IKineticHeap {
         break;
       }
 
-      // remove the current
       Certificate certificate = certificates.getMin();
 
       if (certificate.getOwnIdx() == -1) {
@@ -124,47 +118,53 @@ public class KineticHeap implements IKineticHeap {
       }
 
       int elemIdx = certificate.getElementIdx();
+      int parentIdx = Heap.getParent(elemIdx);
+      invalidateCertificates(elemIdx, parentIdx);
 
-      // 1 invalidate certificates
-      invalidateCertificates(elemIdx);
+      heap.swap(elemIdx, parentIdx);
 
-      // 2 swap
-      Collections.swap(heap.getHeapList(), elemIdx, Heap.getParent(elemIdx));
-
-      // 3
       insertCertificates(elemIdx, certificate.getExpirationTime());
-
 
     }
   }
 
+  public KineticElement getValue(int idx) {
+    return heap.getValue(idx);
+  }
 
-  private void invalidateCertificates(int idx) {
-    // no kinetic elements, so do not care about the time
-    List<KineticElement> heapList = heap.getHeapList();
+  /*package*/
+  @VisibleForTesting
+  Heap<Certificate> getCertificates() {
+    return certificates;
+  }
 
+  /*package*/
+  @VisibleForTesting
+  Heap<KineticElement> getHeap() {
+    return heap;
+  }
+
+  private void invalidateCertificates(int idx, int parentIdx) {
     if (idx < heap.size()) {
-      heapList.get(idx).invalidateCertificate(certificates);
+      heap.getValue(idx).invalidateCertificate(certificates);
     }
 
     if (idx != Heap.getRoot()) {
-      heapList.get(Heap.getParent(idx)).invalidateCertificate(certificates);
+      heap.getValue(parentIdx).invalidateCertificate(certificates);
     }
 
     int siblingCertIdx = Heap.getSibling(idx);
     if (siblingCertIdx < heap.size()) {
-      heapList.get(siblingCertIdx).invalidateCertificate(certificates);
+      heap.getValue(siblingCertIdx).invalidateCertificate(certificates);
       int leftIdx = Heap.getLeftChild(idx);
       if (leftIdx < heap.size()) {
-        heapList.get(leftIdx).invalidateCertificate(certificates);
+        heap.getValue(leftIdx).invalidateCertificate(certificates);
         int rightIdx = Heap.getRightChild(idx);
         if (rightIdx < heap.size()) {
-          heapList.get(rightIdx).invalidateCertificate(certificates);
+          heap.getValue(rightIdx).invalidateCertificate(certificates);
         }
       }
     }
-
-
   }
 
   private void insertCertificates(int idx, double time) {
@@ -209,18 +209,18 @@ public class KineticHeap implements IKineticHeap {
       }
 
       boolean hasRight = rightChildIndex < size;
-      int smallestIndex =
+      int smallestChildIndex =
           hasRight && heap.getValue(rightChildIndex).compareTo(heap.getValue(leftChildIndex)) < 0
               ? rightChildIndex : leftChildIndex;
 
-      if (heap.getValue(smallestIndex).compareTo(heap.getValue(curIndex)) < 0) {
-        invalidateCertificates(smallestIndex);
-        Collections.swap(heap.getHeapList(), smallestIndex, curIndex);
-        insertCertificates(smallestIndex, curTime);
+      if (heap.getValue(smallestChildIndex).compareTo(heap.getValue(curIndex)) < 0) {
+        invalidateCertificates(smallestChildIndex, curIndex);
+        heap.swap(smallestChildIndex, curIndex);
+        insertCertificates(smallestChildIndex, curTime);
       } else {
         break;
       }
-      curIndex = smallestIndex;
+      curIndex = smallestChildIndex;
     }
 
     return curIndex;
@@ -232,10 +232,10 @@ public class KineticHeap implements IKineticHeap {
       int parentIndex = Heap.getParent(curIndex);
       if (heap.getValue(curIndex).compareTo(heap.getValue(parentIndex)) < 0) {
         if (curIndex != 0) {
-          invalidateCertificates(curIndex);
+          invalidateCertificates(curIndex, parentIndex);
         }
 
-        Collections.swap(heap.getHeapList(), curIndex, parentIndex);
+        heap.swap(curIndex, parentIndex);
         insertCertificates(curIndex, curTime);
 
       } else {
@@ -256,10 +256,10 @@ public class KineticHeap implements IKineticHeap {
     if (idx == Heap.getRoot()) {
       return;
     }
-    KineticElement thisElement = heap.getHeapList().get(idx);
+    KineticElement thisElement = heap.getValue(idx);
 
     int parentIdx = Heap.getParent(idx);
-    KineticElement parentElement = heap.getHeapList().get(parentIdx);
+    KineticElement parentElement = heap.getValue(parentIdx);
 
     double intersection = thisElement.getIntersectionTime(parentElement);
     if (intersection > newTime
@@ -275,7 +275,7 @@ public class KineticHeap implements IKineticHeap {
 
   private void setCertificateIndex(int idx) {
     if (idx < certificates.size()) {
-      Certificate certificate = certificates.getHeapList().get(idx);
+      Certificate certificate = certificates.getValue(idx);
       certificate.setOwnIdx(idx);
     }
   }

@@ -33,8 +33,7 @@ class KineticHeapTrivialTest {
           ThreadLocalRandom.current().nextDouble(0.0, 10.0),
           ThreadLocalRandom.current().nextDouble(0.5, 2.0), () -> kineticHeap.getCurTime());
       kineticHeap.insert(kineticElement);
-      assertThat(heapChecker(kineticHeap.getHeap().getHeapArray(KineticElement.class),
-          0, kineticHeap.size() - 1)).isTrue();
+      assertThat(heapChecker(kineticHeap, 0)).isTrue();
     });
   }
 
@@ -49,8 +48,7 @@ class KineticHeapTrivialTest {
 
     while (kineticHeap.size() > 0) {
       kineticHeap.extractMin();
-      assertThat(heapChecker(kineticHeap.getHeap().getHeapArray(KineticElement.class),
-          0, kineticHeap.size() - 1)).isTrue();
+      assertThat(heapChecker(kineticHeap, 0)).isTrue();
     }
   }
 
@@ -61,18 +59,15 @@ class KineticHeapTrivialTest {
           ThreadLocalRandom.current().nextDouble(0.5, 2.0), () -> kineticHeap.getCurTime()));
       kineticHeap.insert(new KineticElement(id, ThreadLocalRandom.current().nextDouble(0.0, 10.0),
           ThreadLocalRandom.current().nextDouble(0.5, 2.0), () -> kineticHeap.getCurTime()));
-      assertThat(heapChecker(kineticHeap.getHeap().getHeapArray(KineticElement.class),
-          0, kineticHeap.size() - 1)).isTrue();
+      assertThat(heapChecker(kineticHeap, 0)).isTrue();
 
       kineticHeap.extractMin();
-      assertThat(heapChecker(kineticHeap.getHeap().getHeapArray(KineticElement.class),
-          0, kineticHeap.size() - 1)).isTrue();
+      assertThat(heapChecker(kineticHeap, 0)).isTrue();
     });
 
     while (kineticHeap.size() > 0) {
       kineticHeap.extractMin();
-      assertThat(heapChecker(kineticHeap.getHeap().getHeapArray(KineticElement.class),
-          0, kineticHeap.size() - 1)).isTrue();
+      assertThat(heapChecker(kineticHeap, 0)).isTrue();
     }
   }
 
@@ -96,17 +91,15 @@ class KineticHeapTrivialTest {
           e.getInitialPriority(),
           e.getRate(), () -> kineticHeap.getCurTime());
       kineticHeap.insert(kineticElement);
-      assertThat(heapChecker(kineticHeap.getHeap().getHeapArray(KineticElement.class),
-          0, kineticHeap.size() - 1)).isTrue();
+      assertThat(heapChecker(kineticHeap, 0)).isTrue();
     });
 
-    double maxIntersectionTime = Utils.maxTimeForPermutations(kineticHeap.getHeap().getHeapList());
+    double maxIntersectionTime = maxTimeForPermutations(kineticHeap);
 
     int t = 0;
     while (true) {
       kineticHeap.fastForward(t);
-      assertThat(heapChecker(kineticHeap.getHeap().getHeapArray(KineticElement.class),
-          0, kineticHeap.size() - 1)).isTrue();
+      assertThat(heapChecker(kineticHeap, 0)).isTrue();
 
       // just to make one my cycle
       if (t - 1 > maxIntersectionTime) {
@@ -119,23 +112,41 @@ class KineticHeapTrivialTest {
   }
 
 
-  private boolean heapChecker(KineticElement[] elements, int i, int n) {
-    if (i >= (n - 1) / 2) {
+  private boolean heapChecker(KineticHeapTrivial kineticHeap, int i) {
+    if (i >= (kineticHeap.size() - 1) / 2) {
       return true;
     }
 
-    KineticElement thisElement = elements[i];
-    KineticElement leftChild = elements[Heap.getLeftChild(i)];
-    KineticElement rightChild = elements[Heap.getRightChild(i)];
+    KineticElement thisElement = kineticHeap.getValue(i);
+    KineticElement leftChild = kineticHeap.getValue(Heap.getLeftChild(i));
+    KineticElement rightChild = kineticHeap.getValue(Heap.getRightChild(i));
 
     if (thisElement.getPriority() > leftChild.getPriority()
         || thisElement.getPriority() > rightChild.getPriority()) {
       return false;
     }
 
-    return heapChecker(elements, Heap.getLeftChild(i), n)
-        && heapChecker(elements, Heap.getRightChild(i), n);
+    return heapChecker(kineticHeap, Heap.getLeftChild(i))
+        && heapChecker(kineticHeap, Heap.getRightChild(i));
 
+  }
+
+  private static double maxTimeForPermutations(KineticHeapTrivial kineticHeap) {
+
+    double maxTime = -1;
+    for (int i = 0; i < kineticHeap.size(); i++) {
+      for (int j = 0; j < kineticHeap.size(); j++) {
+        if (i != j) {
+          double intersection = kineticHeap.getValue(i).getIntersectionTime(kineticHeap.getValue(j));
+          if (intersection >= 0) {
+            maxTime = Math.max(maxTime, intersection);
+          }
+
+        }
+      }
+    }
+
+    return maxTime;
   }
 
 }

@@ -11,15 +11,11 @@ import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 
 @RequiredArgsConstructor
-@AllArgsConstructor
 public class Heap<T extends Comparable<T>> implements IHeap<T> {
 
   private final List<T> heap = new ArrayList<>();
 
-  @VisibleForTesting
-  @Setter
-  private IEventSink eventSink;
-
+  private final IEventSink<T> eventSink;
 
   @Override
   public void clear() {
@@ -59,19 +55,16 @@ public class Heap<T extends Comparable<T>> implements IHeap<T> {
     return heap.size();
   }
 
-  public List<T> getHeapList() {
-    return heap;
+  public void swap(int idx1, int idx2) {
+    Collections.swap(heap, idx1, idx2);
   }
 
-  public T[]  getHeapArray(Class<T> clazz) {
-    return (T[]) heap.toArray((T[])Array.newInstance(clazz, heap.size()));
-  }
 
   public static int getParent(int idx) {
     if (idx == 0) {
       throw new IllegalArgumentException("Cannot get parent from root");
     }
-    return (idx - 1) / 2;
+    return (idx - 1) >> 1;
   }
 
 
@@ -100,17 +93,25 @@ public class Heap<T extends Comparable<T>> implements IHeap<T> {
     return heap.get(idx);
   }
 
+  public T setValue(T value, int idx) {
+    return heap.set(idx, value);
+  }
+
+  public void appendValue(T value) {
+    heap.add(value);
+  }
+
   public int heapUp(int index) {
     int curIndex = index;
     while (curIndex > Heap.getRoot()) {
       int parentIndex = Heap.getParent(curIndex);
       if (getValue(curIndex).compareTo(getValue(parentIndex)) < 0) {
         if (eventSink != null) {
-          eventSink.onBubbleUpEventBeforeSwap(curIndex, parentIndex);
+          eventSink.onBubbleUpEventBeforeSwap(this, curIndex, parentIndex);
         }
-        Collections.swap(heap, curIndex, parentIndex);
+        swap(curIndex, parentIndex);
         if (eventSink != null) {
-          eventSink.onBubbleUpEventAfterSwap(curIndex, parentIndex);
+          eventSink.onBubbleUpEventAfterSwap(this, curIndex, parentIndex);
         }
       } else {
         break;
@@ -121,7 +122,7 @@ public class Heap<T extends Comparable<T>> implements IHeap<T> {
 
     if (eventSink != null) {
       if (curIndex == index) {
-        eventSink.onBubbleUpEventNoChange(curIndex);
+        eventSink.onBubbleUpEventNoChange(this, curIndex);
       }
     }
     return curIndex;
@@ -144,11 +145,11 @@ public class Heap<T extends Comparable<T>> implements IHeap<T> {
 
       if (getValue(smallestIndex).compareTo(getValue(curIndex)) < 0) {
         if (eventSink != null) {
-          eventSink.onBubbleDownEventBeforeSwap(smallestIndex, curIndex);
+          eventSink.onBubbleDownEventBeforeSwap(this, smallestIndex, curIndex);
         }
-        Collections.swap(heap, smallestIndex, curIndex);
+        swap(smallestIndex, curIndex);
         if (eventSink != null) {
-          eventSink.onBubbleDownEventAfterSwap(smallestIndex, curIndex);
+          eventSink.onBubbleDownEventAfterSwap(this, smallestIndex, curIndex);
         }
       } else {
         break;
@@ -158,7 +159,7 @@ public class Heap<T extends Comparable<T>> implements IHeap<T> {
 
     if (eventSink != null) {
       if (curIndex == index) {
-        eventSink.onBubbleDownEventNoChange(curIndex);
+        eventSink.onBubbleDownEventNoChange(this, curIndex);
       }
     }
     return curIndex;
@@ -174,6 +175,23 @@ public class Heap<T extends Comparable<T>> implements IHeap<T> {
     }
 
     return old;
+  }
+
+  public List<T> createListCopy() {
+    return new ArrayList<>(heap);
+  }
+
+
+  @VisibleForTesting
+  @SuppressWarnings("unchecked")
+  T[] getHeapArray(Class<T> clazz) {
+    return (T[]) heap.toArray((T[])Array.newInstance(clazz, heap.size()));
+  }
+
+  /*package*/
+  @VisibleForTesting
+  List<T> getHeapList() {
+    return heap;
   }
 
 
