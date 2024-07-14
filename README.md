@@ -33,10 +33,10 @@ This approach includes the following steps:
 
 What is not included:
 
-* Advanced JMH performance tests, because of a requirement for a very thorough input data preparation. 
+* Advanced JMH performance tests, because of the requirement for a very thorough input data preparation. 
 This is outside the scope of this article.
 * The provided code could be further optimized as we may have alternatives in using relevant data structures 
-(certificate Heap vs Binary Search Tree, lazy certificates invalidation vs immediate removal from the heap,  etc....)
+(certificate Heap vs Binary Search Tree, lazy certificates invalidation vs immediate removal from the heap,  etc...).
 * Theoretical `O(N)` notation complexity analysis.
 * Observations of other kinetic structures like kinetic tournament, kinetic convex hull, kinetic sorted list, etc...
 
@@ -138,7 +138,9 @@ elements that must be swapped with its root element at a given moment of time an
     public class KineticElement implements Comparable<KineticElement> {
     
       private final int id;
+    
       private final double initialPriority;
+      
       private final double rate;
      ...
     
@@ -176,6 +178,7 @@ elements that must be swapped with its root element at a given moment of time an
     
       ...
       private final int elementIdx;
+      
       private final double expirationTime;
     
       @Setter
