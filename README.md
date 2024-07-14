@@ -534,6 +534,8 @@ because of the tests were quite computationally heavy
 You can look at `testExample` folder to see a visual representation of the heap and 
 what happens with certificates when we are forwarding time. 
 
+Compare `trivialHeapAddTimeForward` vs `kineticHeapAddTimeForward`
+
 ## 6. References
 - https://medium.com/@hasithalgamge/unit-testing-part-4-performance-based-unit-test-af83ce6a3966
 - https://trykv.medium.com/algorithms-on-graphs-the-importance-of-heaps-e3e1385ae534
@@ -543,4 +545,4 @@ what happens with certificates when we are forwarding time.
 - https://github.com/6851-2021/kinetic
 - https://github.com/frankfarrell/kds4j
 - https://dspace.library.uvic.ca/server/api/core/bitstreams/fc836d25-2016-4d68-b92e-003b95ef608d/content
-- https://www.baeldung.com/cs/heap-vs-binary-search-tree#:~:text=The%20Heap%20differs%20from%20a,as%20an%20array%20of%20numbers.
+- https://www.baeldung.com/cs/heap-vs-binary-search-tree#:~:text=The%20Heap%20differs%20from%20a,as%20an%20array%20of%20numbers
