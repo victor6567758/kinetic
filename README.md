@@ -18,7 +18,7 @@ depending on what interval of time is used, and can also be wasteful of computat
 
 Kinetic data structures are frequently used to calculate dynamic geo/spatial configurations like moving points over specific trajectories. However, it applies to everything that can be treated as mutating over time, a classical example is a priority queue with priorities as a function of time. 
 
-## 1. Introduction
+## 2. Introduction
 
 There are many scientific researches dedicated to kinetic data structures. 
 However, there are a limited number of practical implementations that could serve understanding and learning purposes. 
@@ -40,7 +40,7 @@ This is outside the scope of this article.
 * Theoretical `O(N)` notation complexity analysis.
 * Observations of other kinetic structures like kinetic tournament, kinetic convex hull, kinetic sorted list, etc...
 
-## 2. Related Works
+## 3. Related Works
 It is worthy to mention several works:
 * Leonidas J Guibas "Kinetic Data Structures" https://graphics.stanford.edu/courses/cs268-16-fall/Notes/g-kds.pdf. It provides a good theoretical problem background for the subject.
 * Fairly good Wiki article: https://en.wikipedia.org/wiki/Kinetic_data_structure
@@ -48,7 +48,7 @@ It is worthy to mention several works:
 * https://dspace.library.uvic.ca/server/api/core/bitstreams/fc836d25-2016-4d68-b92e-003b95ef608d/content.
 It is recommended to read it for better understanding of KDS in geo/space applications.
 
-## 3. Problem Background
+## 4. Problem Background
 Heap is the basic collection structure to effectively perform the following operations:
 * `getMin/Max()` - Return a minimum/maximum value  
 * `insert(x)` - Insert a value
@@ -76,7 +76,7 @@ We need to design a structure that could mitigate this complexity and be quite c
 original logarithmic complexity.
 
 
-## 4. Architecture of the Application and Implementation of the Solution
+## 5. Architecture of the Application and Implementation of the Solution
 ### Prerequisites:
 * We will be creating min heap
 * For simplicity, we will be using a discrete timescale
@@ -442,7 +442,7 @@ elements that must be swapped with its root element at a given moment of time an
   
   ```
 
-## 5.  Performance Evaluation
+## 6.  Performance Evaluation
 
 
 The detailed performance testing is outside the scope of this article.
