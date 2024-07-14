@@ -50,22 +50,25 @@ This is outside the scope of this article.
 ## 3. Related Works
 It is worthy to mention several works:
 
-- Leonidas J Guibas "Kinetic Data Structures" https://graphics.stanford.edu/courses/cs268-16-fall/Notes/g-kds.pdf. It provides a good theoretical problem background for the subject.
+- Leonidas J Guibas "Kinetic Data Structures": https://graphics.stanford.edu/courses/cs268-16-fall/Notes/g-kds.pdf. 
 
-- Fairly good Wiki article: https://en.wikipedia.org/wiki/Kinetic_data_structure
+  It provides a good theoretical problem background for the subject.
 
-- Zahed Rahmati "Simple, Faster Kinetic Data Structures": 
 
-- https://dspace.library.uvic.ca/server/api/core/bitstreams/fc836d25-2016-4d68-b92e-003b95ef608d/content.
-It is recommended to read it for better understanding of KDS in geo/space applications.
+- Fairly good WiKi article: https://en.wikipedia.org/wiki/Kinetic_data_structure
+
+
+- Zahed Rahmati "Simple, Faster Kinetic Data Structures": https://dspace.library.uvic.ca/server/api/core/bitstreams/fc836d25-2016-4d68-b92e-003b95ef608d/content.
+
+  It is recommended to read it for better understanding of KDS in geo/space applications.
 
 
 ## 4. Problem Background
 Heap is the basic collection structure to effectively perform the following operations:
 
-- `getMin/Max()` - Return a minimum/maximum value  
+- `getMin/Max()` - Return a minimum/maximum value.  
 
-- `insert(x)` - Insert a value
+- `insert(x)` - Insert a value.
 
 
 The time complexity is `O(N*log(N))` because the heap is a complete binary tree with the maximum 
@@ -74,6 +77,7 @@ It allows duplicates and usually is used as priority queues. The relevant Java c
 
 However, what will happen if priorities are mutating as a function of time? 
 We will need to add the function:
+
 - `advance(t)` - Advances the system to time `t`
 
 
@@ -95,7 +99,7 @@ original logarithmic complexity.
 ## 5. Architecture of the Application and Implementation of the Solution
 ### Prerequisites:
 
-- We will be creating min heap
+- We will be creating min heap.
 
 - For simplicity, we will be using a discrete timescale
 
@@ -113,8 +117,8 @@ elements that must be swapped with its root element at a given moment of time an
 
   ![img.png](readmeimg/img.png)
 
-  One can see which certificates is necessary to update when the condition `A > B` fails. 
-  This is called a certificate failure (max heap example).
+  One can see which certificates is necessary to update when the condition 
+  `A>B` fails. This is called a certificate failure (max heap example).
 
 ### Implementation steps:
 
@@ -240,12 +244,18 @@ elements that must be swapped with its root element at a given moment of time an
 - Concrete implementation:
   
   Further, we will create a standard heap implementation what is of no real interest, see widespread web resources 
-  explaining how it works, for example: https://trykv.medium.com/algorithms-on-graphs-the-importance-of-heaps-e3e1385ae534
+  explaining how it works, for example: 
+  
+  https://trykv.medium.com/algorithms-on-graphs-the-importance-of-heaps-e3e1385ae534
 
+  
   Standard heap implementation `Heap` class:
+  
   https://github.com/victor6567758/kinetic/blob/a90490c1196a8503c81faeef859628aa0ec9ce20/src/main/java/org/kinetic/heap/Heap.java
 
+  
   The core logic of kinetic approach is implemented in `KineticHeap`:
+  
   https://github.com/victor6567758/kinetic/blob/a90490c1196a8503c81faeef859628aa0ec9ce20/src/main/java/org/kinetic/heap/KineticHeap.java
 
   Those are the key elements:
@@ -485,7 +495,7 @@ scheduled events in the worst case, thus kinetic heaps are local.
 therefore the number of scheduled events is exactly `n-1`, where `n` is the number of nodes 
 in the kinetic heap. Thus, kinetic heaps are compact.
 
-- <b>Efficiency</b>: Note that as per https://en.wikipedia.org/wiki/Kinetic_heap 
+- <b>Efficiency</b>: Note that as per https://en.wikipedia.org/wiki/Kinetic_heap
 (<u>Analysis of efficiency</u>) the analysis is quite complex, but it is quite efficient
 when the number of certificates failures is rather small comparing to the number of elements. 
 This condition is not fulfilled in my tests as I generated elements randomly.
