@@ -93,7 +93,7 @@ elements that must be swapped with its root element at a given moment of time an
 
   ![img.png](readmeimg/img.png)
 
-  One can see which certificates one needs to update when the condition A > B fails. 
+  One can see which certificates is necessary to update when the condition `A > B` fails. 
   This is called a certificate failure (max heap example).
 
 ### Implementation steps:
@@ -216,7 +216,7 @@ elements that must be swapped with its root element at a given moment of time an
     ```
     It will help to intercept events on bubble up and bubble down events on inserting/removing elements from the heap.
 
-* Concrete implementation
+* Concrete implementation:
 
   Further, we will create a standard heap implementation what is of no real interest, see widespread web resources 
   explaining how it works, for example: https://trykv.medium.com/algorithms-on-graphs-the-importance-of-heaps-e3e1385ae534
@@ -393,8 +393,8 @@ elements that must be swapped with its root element at a given moment of time an
     }
   ```
 
-  The code what keeps the `certificates` heap invariants and makes them referencing 
-  correct indexes in the certificate heap: 
+  The code what keeps the `certificates` heap invariants and makes it self-referencing 
+  correct indexes: 
   ```java
   private final Heap<Certificate> certificates = new Heap<>(new CertificateEventSink());
   ...
