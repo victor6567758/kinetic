@@ -13,7 +13,7 @@ For example, kinetic data structures are often used with a set of points.
 In this case, the structure typically allows points to be inserted and deleted. 
 In principle, this can be approximated by sampling the position of the points at fixed intervals 
 of time and deleting and re-inserting each point into a "static" (traditional) data structure. 
-However, such an approach is vulnerable to oversampling or undersampling, 
+However, such an approach is vulnerable to oversampling or under-sampling, 
 depending on what interval of time is used, and can also be wasteful of computational resources.
 
 Kinetic data structures are frequently used to calculate dynamic geo/spatial configurations like moving points over specific trajectories. However, it applies to everything that can be treated as mutating over time, a classical example is a priority queue with priorities as a function of time. 
@@ -496,6 +496,8 @@ because of the tests were quite computationally heavy
 | KineticHeapBenchmark.trivialHeapRemoves               |                    100|   1000|    ss|        | 0.363  | |ms/op 
 | KineticHeapBenchmark.trivialHeapRemoves               |                    100|  10000|    ss|        | 2.379  | |ms/op 
 
+You can look at `testExample` folder to see a visual representation of the heap and 
+what happens with certificates when we are forwarding time. 
 
 ## 6. References
 - https://medium.com/@hasithalgamge/unit-testing-part-4-performance-based-unit-test-af83ce6a3966
