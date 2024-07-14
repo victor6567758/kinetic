@@ -1,9 +1,6 @@
 package org.kinetic.heap;
 
 import com.google.common.annotations.VisibleForTesting;
-import java.util.Collections;
-import java.util.List;
-import lombok.Getter;
 
 public class KineticHeap implements IKineticHeap {
 
@@ -48,8 +45,6 @@ public class KineticHeap implements IKineticHeap {
       setCertificateIndex(idx);
     }
   }
-
-
 
 
   @Override
@@ -262,8 +257,7 @@ public class KineticHeap implements IKineticHeap {
     KineticElement parentElement = heap.getValue(parentIdx);
 
     double intersection = thisElement.getIntersectionTime(parentElement);
-    if (intersection > newTime
-        /*|| intersection == newTime && thisElement.getRate() < parentElement.getRate() */) {
+    if (intersection > newTime) {
       Certificate certificate = new Certificate(idx, intersection);
       thisElement.setCertificate(certificate);
 

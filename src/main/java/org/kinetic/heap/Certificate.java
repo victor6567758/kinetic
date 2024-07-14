@@ -1,7 +1,6 @@
 package org.kinetic.heap;
 
 import java.text.DecimalFormat;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;

@@ -1,10 +1,7 @@
 package org.kinetic.heap;
 
 import com.google.common.annotations.VisibleForTesting;
-import java.lang.reflect.Array;
-import java.util.ArrayList;
 import java.util.List;
-import lombok.Getter;
 
 public class KineticHeapTrivial implements IKineticHeap {
 

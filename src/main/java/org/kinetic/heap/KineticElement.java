@@ -1,12 +1,10 @@
 package org.kinetic.heap;
 
-import com.google.common.annotations.VisibleForTesting;
 import java.text.DecimalFormat;
 import java.util.function.Supplier;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
-import lombok.SneakyThrows;
 
 @RequiredArgsConstructor
 @Getter
