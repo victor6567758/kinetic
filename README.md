@@ -261,8 +261,8 @@ elements that must be swapped with its root element at a given moment of time an
   This logic, probably, can be done better as to avoid possible edge conditions. 
 
   ```java
-  @Override
-    public void fastForward(int nextTime) {
+   @Override
+   public void fastForward(int nextTime) {
       if (nextTime <= curTime) {
         return;
       }
@@ -291,7 +291,7 @@ elements that must be swapped with its root element at a given moment of time an
         insertCertificates(elemIdx, certificate.getExpirationTime());
   
       }
-    }
+   }
   ```
 
   Let's review bubble up/down functions. This is quite a standard implementation, 
@@ -300,7 +300,7 @@ elements that must be swapped with its root element at a given moment of time an
   exceeds curTime. If no swap occurred, we are just inserting the only one certificate for the current index, 
   because we don't need to invalidate other ones.
   ```java
-  private int heapUp() {
+    private int heapUp() {
       int curIndex = heap.size() - 1;
       while (curIndex > Heap.getRoot()) {
         int parentIndex = Heap.getParent(curIndex);
@@ -329,7 +329,7 @@ elements that must be swapped with its root element at a given moment of time an
   That's also a standard implementation. If no swap occurred, we don't do anything 
   as we always start from the root.
   ```java
-  private int heapDown() {
+   private int heapDown() {
       int curIndex = 0;
       int size = heap.size();
       while (true) {
@@ -355,7 +355,7 @@ elements that must be swapped with its root element at a given moment of time an
       }
   
       return curIndex;
-    }
+   }
   ```
 
   Let's look at `extractMin`/`insert` methods.
