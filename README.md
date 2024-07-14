@@ -4,9 +4,9 @@
 
 A kinetic data structure is a data structure used to track an attribute of a system that is changing continuously as a function of time. So the system has some values, and for each value v, it is known that v=f(t). Kinetic data structures allow queries on a system at the current virtual time t  and two additional operations:
 
-`advance(t)` - Advances the system to time 
+`advance(t)` - Advances the system to time.
 
-`change(v, f(t))`- Alters the trajectory of value
+`change(v, f(t))`- Alters the trajectory of value.
 
 Additional operations may be supported. 
 For example, kinetic data structures are often used with a set of points. 
@@ -26,13 +26,13 @@ This article intends to partially fill the gap and to provide a proof of concept
 
 This approach includes the following steps:
 
-- Review of the certificate-based approach
+- Review of the certificate-based approach.
 
-- Creating  a model  for Kinetic Heap
+- Creating  a model  for Kinetic Heap.
 
-- Java code design and implementation
+- Java code design and implementation.
 
-- Basic performance tests
+- Basic performance tests.
 
 What is not included:
 
@@ -50,7 +50,7 @@ This is outside the scope of this article.
 ## 3. Related Works
 It is worthy to mention several works:
 
-- Leonidas J Guibas "Kinetic Data Structures": https://graphics.stanford.edu/courses/cs268-16-fall/Notes/g-kds.pdf. 
+- Leonidas J Guibas "Kinetic Data Structures": https://graphics.stanford.edu/courses/cs268-16-fall/Notes/g-kds.pdf 
 
   It provides a good theoretical problem background for the subject.
 
@@ -58,7 +58,7 @@ It is worthy to mention several works:
 - Fairly good WiKi article: https://en.wikipedia.org/wiki/Kinetic_data_structure
 
 
-- Zahed Rahmati "Simple, Faster Kinetic Data Structures": https://dspace.library.uvic.ca/server/api/core/bitstreams/fc836d25-2016-4d68-b92e-003b95ef608d/content.
+- Zahed Rahmati "Simple, Faster Kinetic Data Structures": https://dspace.library.uvic.ca/server/api/core/bitstreams/fc836d25-2016-4d68-b92e-003b95ef608d/content
 
   It is recommended to read it for better understanding of KDS in geo/space applications.
 
@@ -78,7 +78,7 @@ It allows duplicates and usually is used as priority queues. The relevant Java c
 However, what will happen if priorities are mutating as a function of time? 
 We will need to add the function:
 
-- `advance(t)` - Advances the system to time `t`
+- `advance(t)` - Advances the system to time `t`.
 
 
 There are a lot of examples, starting from a set of objects having various initial temperatures at 
@@ -101,7 +101,7 @@ original logarithmic complexity.
 
 - We will be creating min heap.
 
-- For simplicity, we will be using a discrete timescale
+- For simplicity, we will be using a discrete timescale.
 
 - We will use a simple kinetic structure - priorities will be the linear function of time and 
 initial temperature: `t(x) = t(0) + t * a`, where `a` is the temperature rate, `t(0)` - an initial temperature.
@@ -121,6 +121,8 @@ elements that must be swapped with its root element at a given moment of time an
   `A>B` fails. This is called a certificate failure (max heap example).
 
 ### Implementation steps:
+
+GitHub repo is located here: https://github.com/victor6567758/kinetic
 
 - Let's start from interfaces 
   
@@ -250,13 +252,12 @@ elements that must be swapped with its root element at a given moment of time an
 
   
   Standard heap implementation `Heap` class:
-  
-  https://github.com/victor6567758/kinetic/blob/a90490c1196a8503c81faeef859628aa0ec9ce20/src/main/java/org/kinetic/heap/Heap.java
 
+  `src/main/java/org/kinetic/heap/Heap.java`
   
   The core logic of kinetic approach is implemented in `KineticHeap`:
-  
-  https://github.com/victor6567758/kinetic/blob/a90490c1196a8503c81faeef859628aa0ec9ce20/src/main/java/org/kinetic/heap/KineticHeap.java
+
+  `src/main/java/org/kinetic/heap/KineticHeap.java`
 
   Those are the key elements:
 
@@ -501,7 +502,7 @@ when the number of certificates failures is rather small comparing to the number
 This condition is not fulfilled in my tests as I generated elements randomly.
 However, we still see performance gains compared to the trivial implementation:
 The micro-benchmarking was performed with JMH library, `SingleShotTime` mode 
-because of the tests were quite computationally heavy  
+because of the tests were quite computationally heavy.
 
 
 | Benchmark                        |(maxTimeSteps)| (n)   | Mode | Score  |Units |
