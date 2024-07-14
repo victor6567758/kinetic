@@ -26,32 +26,47 @@ This article intends to partially fill the gap and to provide a proof of concept
 
 This approach includes the following steps:
 
-* Review of the certificate-based approach
-* Creating  a model  for Kinetic Heap
-* Java code design and implementation
-* Basic performance tests
+- Review of the certificate-based approach
+
+- Creating  a model  for Kinetic Heap
+
+- Java code design and implementation
+
+- Basic performance tests
 
 What is not included:
 
-* Advanced JMH performance tests, because of the requirement for a very thorough input data preparation. 
+- Advanced JMH performance tests, because of the requirement for a very thorough input data preparation. 
 This is outside the scope of this article.
-* The provided code could be further optimized as we may have alternatives in using relevant data structures 
+
+- The provided code could be further optimized as we may have alternatives in using relevant data structures 
 (certificate Heap vs Binary Search Tree, lazy certificates invalidation vs immediate removal from the heap,  etc...).
-* Theoretical `O(N)` notation complexity analysis.
-* Observations of other kinetic structures like kinetic tournament, kinetic convex hull, kinetic sorted list, etc...
+
+- Theoretical `O(N)` notation complexity analysis.
+
+- Observations of other kinetic structures like kinetic tournament, kinetic convex hull, kinetic sorted list, etc...
+
 
 ## 3. Related Works
 It is worthy to mention several works:
-* Leonidas J Guibas "Kinetic Data Structures" https://graphics.stanford.edu/courses/cs268-16-fall/Notes/g-kds.pdf. It provides a good theoretical problem background for the subject.
-* Fairly good Wiki article: https://en.wikipedia.org/wiki/Kinetic_data_structure
-* Zahed Rahmati "Simple, Faster Kinetic Data Structures": 
-* https://dspace.library.uvic.ca/server/api/core/bitstreams/fc836d25-2016-4d68-b92e-003b95ef608d/content.
+
+- Leonidas J Guibas "Kinetic Data Structures" https://graphics.stanford.edu/courses/cs268-16-fall/Notes/g-kds.pdf. It provides a good theoretical problem background for the subject.
+
+- Fairly good Wiki article: https://en.wikipedia.org/wiki/Kinetic_data_structure
+
+- Zahed Rahmati "Simple, Faster Kinetic Data Structures": 
+
+- https://dspace.library.uvic.ca/server/api/core/bitstreams/fc836d25-2016-4d68-b92e-003b95ef608d/content.
 It is recommended to read it for better understanding of KDS in geo/space applications.
+
 
 ## 4. Problem Background
 Heap is the basic collection structure to effectively perform the following operations:
-* `getMin/Max()` - Return a minimum/maximum value  
-* `insert(x)` - Insert a value
+
+- `getMin/Max()` - Return a minimum/maximum value  
+
+- `insert(x)` - Insert a value
+
 
 The time complexity is `O(N*log(N))` because the heap is a complete binary tree with the maximum 
 height `log(k)` where `k` is the number of elements. 
@@ -59,7 +74,8 @@ It allows duplicates and usually is used as priority queues. The relevant Java c
 
 However, what will happen if priorities are mutating as a function of time? 
 We will need to add the function:
-* `advance(t)` - Advances the system to time `t`
+- `advance(t)` - Advances the system to time `t`
+
 
 There are a lot of examples, starting from a set of objects having various initial temperatures at 
 `0` point of time and heating with different rates. 
@@ -78,14 +94,18 @@ original logarithmic complexity.
 
 ## 5. Architecture of the Application and Implementation of the Solution
 ### Prerequisites:
-* We will be creating min heap
-* For simplicity, we will be using a discrete timescale
-* We will use a simple kinetic structure - priorities will be the linear function of time and 
+
+- We will be creating min heap
+
+- For simplicity, we will be using a discrete timescale
+
+- We will use a simple kinetic structure - priorities will be the linear function of time and 
 initial temperature: `t(x) = t(0) + t * a`, where `a` is the temperature rate, `t(0)` - an initial temperature.
 Thus, we will guarantee that a given pair of temperature lines will intersect only once 
 (if converging to an intersection point). This point is easy to calculate and exclude from calculations 
 once the intersection point is processed.
-* We will be using a well-known certificate-based approach. 
+
+- We will be using a well-known certificate-based approach. 
 Wiki describes this quite well: https://en.wikipedia.org/wiki/Kinetic_heap,
 see (<u>Implementation and operations</u>, <u>Dealing with certificate failures</u> section). 
 Certificates are just additional components allowing detection of
@@ -97,127 +117,128 @@ elements that must be swapped with its root element at a given moment of time an
   This is called a certificate failure (max heap example).
 
 ### Implementation steps:
-* Let's start from interfaces 
-  * <b>Standard heap:</b>
 
-    ```java
-    public interface IHeap<T extends Comparable<T>> {
-            
-      T extractMin();
-            
-      T getMin();
-            
-      void insert(T data);
-            
-      int size();
-            
-      void clear();
-    }
-    ```
+- Let's start from interfaces 
   
-  * <b>Kinetic heap:</b>
+  <b>Standard heap</b>:
 
-    ```java
-    public interface IKineticHeap extends IHeap<KineticElement> {
-    
-      void fastForward(int nextTime);
-    
-      int getCurTime();
-    }
-    ```
-    
-  * <b>Kinetic element.</b> The important attributes are:
+  ```java
+  public interface IHeap<T extends Comparable<T>> {
+            
+    T extractMin();
+            
+    T getMin();
+            
+    void insert(T data);
+            
+    int size();
+            
+    void clear();
+  }
+  ```
   
-    `id` - element ID
-    
-    `initialPriority` - initial priority
-    
-    `rate` - temperature rate over time 
+  <b>Kinetic heap</b>:
 
-    ```java
-    public class KineticElement implements Comparable<KineticElement> {
+  ```java
+  public interface IKineticHeap extends IHeap<KineticElement> {
     
-      private final int id;
+    void fastForward(int nextTime);
     
-      private final double initialPriority;
+    int getCurTime();
+  }
+  ```
+    
+  <b>Kinetic element.</b> The important attributes are:
+  
+  `id` - element ID
+    
+  `initialPriority` - initial priority
+    
+  `rate` - temperature rate over time 
+
+  ```java
+  public class KineticElement implements Comparable<KineticElement> {
+    
+    private final int id;
+    
+    private final double initialPriority;
       
-      private final double rate;
-     ...
-    
-      public double getPriority() {
-        return initialPriority + rate * timeSupplier.get();
-      }
+    private final double rate;
     ...
-      public double getIntersectionTime(KineticElement other) {
-        if (rate - other.rate == 0) {
+    
+    public double getPriority() {
+      return initialPriority + rate * timeSupplier.get();
+    }
+    ...
+    public double getIntersectionTime(KineticElement other) {
+      if (rate - other.rate == 0) {
           return Double.NEGATIVE_INFINITY;
-        }
-        return (other.initialPriority - initialPriority) / (rate - other.rate);
       }
+      return (other.initialPriority - initialPriority) / (rate - other.rate);
+    }
     
-      @Override
-      public int compareTo(KineticElement other) {
-        return Double.compare(getPriority(), other.getPriority());
-      }
+    @Override
+    public int compareTo(KineticElement other) {
+      return Double.compare(getPriority(), other.getPriority());
+    }
     ...
-    
-    }
-    ```
-    Note, that it is quite easy to calculate intersection time.
-
-  * <b>Certificate</b>:
+  }
+  ```
   
-    `elementIdx` - the reference index of a kinetic element
+  Note that it is quite easy to calculate intersection time.
 
-    `expirationTime` - a certificate expiration time
+  <b>Certificate</b>:
+  
+  `elementIdx` - the reference index of a kinetic element
 
-    `ownIdx` - an index of an element in a heap 
+  `expirationTime` - a certificate expiration time
 
-    ```java
-    public class Certificate implements Comparable<Certificate> {
-    
-      ...
-      private final int elementIdx;
+  `ownIdx` - an index of an element in a heap 
+
+  ```java
+  public class Certificate implements Comparable<Certificate> {
+    ...
+    private final int elementIdx;
       
-      private final double expirationTime;
+    private final double expirationTime;
     
-      @Setter
-      private int ownIdx = -1;
+    @Setter
+    private int ownIdx = -1;
     
-      @Override
-      public int compareTo(Certificate other) {
-        return Double.compare(expirationTime, other.expirationTime);
-      }
-    
-      ...
-    
+    @Override
+    public int compareTo(Certificate other) {
+      return Double.compare(expirationTime, other.expirationTime);
     }
-    ```
+    ...
+  }
+  ```
 
-    Note that the heap is an array-based structure, so we will be using index-based access for certificates and elements. 
-    Therefore, to effectively remove certificates from the middle of the heap, we need to keep relevant indexes.  
+  Note that the heap is an array-based structure, so we will be using index-based access for certificates and elements. 
+  Therefore, to effectively remove certificates from the middle of the heap, we need to keep relevant indexes.  
 
-    To make this synchronization easier, the helper `IEventSink` interface is created 
-    ```java
-    public interface IEventSink<T extends Comparable<T>> {
+  To make this synchronization easier, the helper `IEventSink` interface is created 
+  ```java
+  public interface IEventSink<T extends Comparable<T>> {
     
-      void onBubbleUpEventBeforeSwap(IHeap<T> heap, int idx, int parentIdx);
+    void onBubbleUpEventBeforeSwap(IHeap<T> heap, int idx, int parentIdx);
     
-      void onBubbleUpEventAfterSwap(IHeap<T> heap, int idx, int parentIdx);
+    void onBubbleUpEventAfterSwap(IHeap<T> heap, int idx, int parentIdx);
     
-      void onBubbleUpEventNoChange(IHeap<T> heap, int idx);
+    void onBubbleUpEventNoChange(IHeap<T> heap, int idx);
     
-      void onBubbleDownEventBeforeSwap(IHeap<T> heap, int idx, int parentIdx);
+    void onBubbleDownEventBeforeSwap(IHeap<T> heap, int idx, int parentIdx);
     
-      void onBubbleDownEventAfterSwap(IHeap<T> heap, int idx, int parentIdx);
+    void onBubbleDownEventAfterSwap(IHeap<T> heap, int idx, int parentIdx);
     
-      void onBubbleDownEventNoChange(IHeap<T> heap, int idx);
-    }
-    ```
-    It will help to intercept events on bubble up and bubble down events on inserting/removing elements from the heap.
+    void onBubbleDownEventNoChange(IHeap<T> heap, int idx);
+  }
+  ```
+  
+  It will help to intercept events on bubble up and bubble down events on inserting/removing elements from the heap.
 
-* Concrete implementation:
 
+- Concrete implementation:
+  
   Further, we will create a standard heap implementation what is of no real interest, see widespread web resources 
   explaining how it works, for example: https://trykv.medium.com/algorithms-on-graphs-the-importance-of-heaps-e3e1385ae534
 
@@ -250,6 +271,7 @@ elements that must be swapped with its root element at a given moment of time an
   
     private int curTime;
     ...
+  }
   ```
 
   Let's review `fastForward` function:
@@ -261,37 +283,37 @@ elements that must be swapped with its root element at a given moment of time an
   This logic, probably, can be done better as to avoid possible edge conditions. 
 
   ```java
-   @Override
-   public void fastForward(int nextTime) {
-      if (nextTime <= curTime) {
-        return;
+  @Override
+  public void fastForward(int nextTime) {
+    if (nextTime <= curTime) {
+      return;
+    }
+  
+    curTime = nextTime;
+  
+    while (true) {
+  
+      Certificate minCertificate = certificates.getMin();
+      if (minCertificate == null || certificates.getMin().getExpirationTime() > nextTime) {
+        break;
       }
   
-      curTime = nextTime;
+      Certificate certificate = certificates.getMin();
   
-      while (true) {
-  
-        Certificate minCertificate = certificates.getMin();
-        if (minCertificate == null || certificates.getMin().getExpirationTime() > nextTime) {
-          break;
-        }
-  
-        Certificate certificate = certificates.getMin();
-  
-        if (certificate.getOwnIdx() == -1) {
-          throw new IllegalArgumentException();
-        }
-  
-        int elemIdx = certificate.getElementIdx();
-        int parentIdx = Heap.getParent(elemIdx);
-        invalidateCertificates(elemIdx, parentIdx);
-  
-        heap.swap(elemIdx, parentIdx);
-  
-        insertCertificates(elemIdx, certificate.getExpirationTime());
-  
+      if (certificate.getOwnIdx() == -1) {
+        throw new IllegalArgumentException();
       }
-   }
+  
+      int elemIdx = certificate.getElementIdx();
+      int parentIdx = Heap.getParent(elemIdx);
+      invalidateCertificates(elemIdx, parentIdx);
+  
+      heap.swap(elemIdx, parentIdx);
+  
+      insertCertificates(elemIdx, certificate.getExpirationTime());
+  
+    }
+  }
   ```
 
   Let's review bubble up/down functions. This is quite a standard implementation, 
@@ -300,62 +322,61 @@ elements that must be swapped with its root element at a given moment of time an
   exceeds curTime. If no swap occurred, we are just inserting the only one certificate for the current index, 
   because we don't need to invalidate other ones.
   ```java
-    private int heapUp() {
-      int curIndex = heap.size() - 1;
-      while (curIndex > Heap.getRoot()) {
-        int parentIndex = Heap.getParent(curIndex);
-        if (heap.getValue(curIndex).compareTo(heap.getValue(parentIndex)) < 0) {
-          if (curIndex != 0) {
-            invalidateCertificates(curIndex, parentIndex);
-          }
-  
-          heap.swap(curIndex, parentIndex);
-          insertCertificates(curIndex, curTime);
-  
-        } else {
-          break;
+  private int heapUp() {
+    int curIndex = heap.size() - 1;
+    while (curIndex > Heap.getRoot()) {
+      int parentIndex = Heap.getParent(curIndex);
+      if (heap.getValue(curIndex).compareTo(heap.getValue(parentIndex)) < 0) {
+        if (curIndex != 0) {
+          invalidateCertificates(curIndex, parentIndex);
         }
   
-        curIndex = parentIndex;
+        heap.swap(curIndex, parentIndex);
+        insertCertificates(curIndex, curTime);
+      } else {
+        break;
       }
   
-      if (curIndex == heap.size() - 1) {
-        createAndMaybeAddCertificate(curIndex, curTime);
-      }
-      return curIndex;
+      curIndex = parentIndex;
     }
+  
+    if (curIndex == heap.size() - 1) {
+      createAndMaybeAddCertificate(curIndex, curTime);
+    }
+    return curIndex;
+  }
   ```
 
   That's also a standard implementation. If no swap occurred, we don't do anything 
   as we always start from the root.
   ```java
-   private int heapDown() {
-      int curIndex = 0;
-      int size = heap.size();
-      while (true) {
-        int leftChildIndex = Heap.getLeftChild(curIndex);
-        int rightChildIndex = Heap.getRightChild(curIndex);
-        if (leftChildIndex >= size) {
-          break;
-        }
-  
-        boolean hasRight = rightChildIndex < size;
-        int smallestChildIndex =
-            hasRight && heap.getValue(rightChildIndex).compareTo(heap.getValue(leftChildIndex)) < 0
-                ? rightChildIndex : leftChildIndex;
-  
-        if (heap.getValue(smallestChildIndex).compareTo(heap.getValue(curIndex)) < 0) {
-          invalidateCertificates(smallestChildIndex, curIndex);
-          heap.swap(smallestChildIndex, curIndex);
-          insertCertificates(smallestChildIndex, curTime);
-        } else {
-          break;
-        }
-        curIndex = smallestChildIndex;
+  private int heapDown() {
+    int curIndex = 0;
+    int size = heap.size();
+    while (true) {
+      int leftChildIndex = Heap.getLeftChild(curIndex);
+      int rightChildIndex = Heap.getRightChild(curIndex);
+      if (leftChildIndex >= size) {
+        break;
       }
   
-      return curIndex;
-   }
+      boolean hasRight = rightChildIndex < size;
+      int smallestChildIndex =
+          hasRight && heap.getValue(rightChildIndex).compareTo(heap.getValue(leftChildIndex)) < 0
+                ? rightChildIndex : leftChildIndex;
+  
+      if (heap.getValue(smallestChildIndex).compareTo(heap.getValue(curIndex)) < 0) {
+        invalidateCertificates(smallestChildIndex, curIndex);
+        heap.swap(smallestChildIndex, curIndex);
+        insertCertificates(smallestChildIndex, curTime);
+      } else {
+        break;
+      }
+      curIndex = smallestChildIndex;
+    }
+  
+    return curIndex;
+  }
   ```
 
   Let's look at `extractMin`/`insert` methods.
@@ -363,34 +384,34 @@ elements that must be swapped with its root element at a given moment of time an
   Remember to invalidate a relevant certificate before removing the last element.
 
   ```java
-    @Override
-    public KineticElement extractMin() {
-      KineticElement minElement = getMin();
+  @Override
+  public KineticElement extractMin() {
+    KineticElement minElement = getMin();
   
-      if (minElement != null) {
-        int lastIdx = heap.size() - 1;
+    if (minElement != null) {
+      int lastIdx = heap.size() - 1;
   
-        heap.getValue(lastIdx).invalidateCertificate(certificates);
-        KineticElement old = heap.setValue(heap.getValue(lastIdx), 0);
-        heap.remove(heap.size() - 1);
+      heap.getValue(lastIdx).invalidateCertificate(certificates);
+      KineticElement old = heap.setValue(heap.getValue(lastIdx), 0);
+      heap.remove(heap.size() - 1);
   
-        heapDown();
-        return old;
-      }
-  
-      return null;
+      heapDown();
+      return old;
     }
+  
+    return null;
+  }
   ```
 
   ```java
-    @Override
-    public void insert(KineticElement data) {
-      if (data == null) {
-        throw new IllegalArgumentException("Invalid data");
-      }
-      heap.appendValue(data);
-      heapUp();
+  @Override
+  public void insert(KineticElement data) {
+    if (data == null) {
+      throw new IllegalArgumentException("Invalid data");
     }
+    heap.appendValue(data);
+    heapUp();
+  }
   ```
 
   The code what keeps the `certificates` heap invariants and makes it self-referencing 
@@ -399,7 +420,7 @@ elements that must be swapped with its root element at a given moment of time an
   private final Heap<Certificate> certificates = new Heap<>(new CertificateEventSink());
   ...
   
-  private class CertificateEventSink implements IEventSink<Certificate> {
+    private class CertificateEventSink implements IEventSink<Certificate> {
   
       @Override
       public void onBubbleUpEventBeforeSwap(IHeap<Certificate> heap, int idx, int parentIdx) {
@@ -434,15 +455,16 @@ elements that must be swapped with its root element at a given moment of time an
         setCertificateIndex(idx);
       }
     }
-  ...
+    ...
   
-  private void setCertificateIndex(int idx) {
-    if (idx < certificates.size()) {
-      Certificate certificate = certificates.getValue(idx);
-      certificate.setOwnIdx(idx);
+    private void setCertificateIndex(int idx) {
+      if (idx < certificates.size()) {
+        Certificate certificate = certificates.getValue(idx);
+        certificate.setOwnIdx(idx);
+      }
     }
+    ...
   }
-  
   ```
 
 ## 6.  Performance Evaluation
@@ -452,18 +474,18 @@ The detailed performance testing is outside the scope of this article.
 
 It is essential to keep in mind those metrics must be observed:
 
-* <b>Responsiveness</b>: A kinetic heap is responsive, since each certificate failure causes impacted 
+- <b>Responsiveness</b>: A kinetic heap is responsive, since each certificate failure causes impacted 
 keys to be swapped and leads to only a few certificates being replaced in the worst case.
 
-* <b>Locality</b>: Each node is present in one certificate each along with its parent node and 
+- <b>Locality</b>: Each node is present in one certificate each along with its parent node and 
 two child nodes (if present), meaning that each node can be involved in a total of three 
 scheduled events in the worst case, thus kinetic heaps are local.
 
-* <b>Compactness</b>: Each edge in the heap corresponds to exactly one scheduled event, 
+- <b>Compactness</b>: Each edge in the heap corresponds to exactly one scheduled event, 
 therefore the number of scheduled events is exactly `n-1`, where `n` is the number of nodes 
 in the kinetic heap. Thus, kinetic heaps are compact.
 
-* <b>Efficiency</b>: Note that as per https://en.wikipedia.org/wiki/Kinetic_heap 
+- <b>Efficiency</b>: Note that as per https://en.wikipedia.org/wiki/Kinetic_heap 
 (<u>Analysis of efficiency</u>) the analysis is quite complex, but it is quite efficient
 when the number of certificates failures is rather small comparing to the number of elements. 
 This condition is not fulfilled in my tests as I generated elements randomly.
