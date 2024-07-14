@@ -504,32 +504,32 @@ The micro-benchmarking was performed with JMH library, `SingleShotTime` mode
 because of the tests were quite computationally heavy  
 
 
-| Benchmark                                             |                                       (maxTimeSteps)|    (n)|  Mode|  Cnt| Score  | Error | Units |
-|-------------------------------------------------------|----|----|----|----|--------|-|-------|
-| KineticHeapBenchmark.kineticHeapAddTimeForward        |             100|     10|    ss|        | 0.146  | | ms/op |
-| KineticHeapBenchmark.kineticHeapAddTimeForward        |             100|    100|    ss|        | 0.383  | | ms/op |
-| KineticHeapBenchmark.kineticHeapAddTimeForward        |             100|   1000|    ss|        | 1.764  | | ms/op |
-| <b>KineticHeapBenchmark.kineticHeapAddTimeForward</b> |             100|  10000|    ss|        | 8.198  | | ms/op |
-| KineticHeapBenchmark.kineticHeapInserts               |                    100|     10|    ss|        | 0.075  | | ms/op |
-| KineticHeapBenchmark.kineticHeapInserts               |                    100|    100|    ss|        | 0.229  | |ms/op 
-| KineticHeapBenchmark.kineticHeapInserts               |                    100|   1000|    ss|        | 0.837  | |ms/op 
-| KineticHeapBenchmark.kineticHeapInserts               |                    100|  10000|    ss|        | 4.618  | |ms/op 
-| KineticHeapBenchmark.kineticHeapRemoves               |                    100|     10|    ss|        | 0.215  | |ms/op 
-| KineticHeapBenchmark.kineticHeapRemoves               |                    100|    100|    ss|        | 0.483  | |ms/op 
-| KineticHeapBenchmark.kineticHeapRemoves               |                    100|   1000|    ss|        | 7.558  | |ms/op 
-| KineticHeapBenchmark.kineticHeapRemoves               |                    100|  10000|    ss|       | 50.519 | |ms/op 
-| KineticHeapBenchmark.trivialHeapAddTimeForward        |             100|     10|    ss|        | 1.233  | |ms/op 
-| KineticHeapBenchmark.trivialHeapAddTimeForward        |             100|    100|    ss|        | 1.666  | |ms/op 
-| KineticHeapBenchmark.trivialHeapAddTimeForward        |             100|   1000|    ss|        | 3.034  | |ms/op 
-| <b>KineticHeapBenchmark.trivialHeapAddTimeForward</b> |             100|  10000|    ss|       | 18.022 | |ms/op 
-| KineticHeapBenchmark.trivialHeapInserts               |                    100|     10|    ss|        | 0.025  | |ms/op 
-| KineticHeapBenchmark.trivialHeapInserts               |                    100|    100|    ss|        | 0.046  | |ms/op 
-| KineticHeapBenchmark.trivialHeapInserts               |                    100|   1000|    ss|        | 0.186  | |ms/op 
-| KineticHeapBenchmark.trivialHeapInserts               |                    100|  10000|    ss|        | 0.850  | |ms/op 
-| KineticHeapBenchmark.trivialHeapRemoves               |                    100|     10|    ss|        | 0.035  | |ms/op 
-| KineticHeapBenchmark.trivialHeapRemoves               |                    100|    100|    ss|        | 0.245  | |ms/op 
-| KineticHeapBenchmark.trivialHeapRemoves               |                    100|   1000|    ss|        | 0.363  | |ms/op 
-| KineticHeapBenchmark.trivialHeapRemoves               |                    100|  10000|    ss|        | 2.379  | |ms/op 
+| Benchmark                        |(maxTimeSteps)| (n)   | Mode | Score  |Units |
+|----------------------------------|--------------|-------|-----|--------|-------|
+| kineticHeapAddTimeForward        | 100          | 10    | ss  | 0.146  | ms/op |
+| kineticHeapAddTimeForward        | 100          | 100   | ss  | 0.383  | ms/op |
+| kineticHeapAddTimeForward        | 100          | 1000  | ss  | 1.764  | ms/op |
+| <b>kineticHeapAddTimeForward</b> | 100          | 10000 | ss  | 8.198  | ms/op |
+| kineticHeapInserts               | 100          | 10    | ss  | 0.075  | ms/op |
+| kineticHeapInserts               | 100          | 100   | ss  | 0.229  | ms/op |
+| kineticHeapInserts               | 100          | 1000  | ss  | 0.837  | ms/op |
+| kineticHeapInserts               | 100          | 10000 | ss  | 4.618  | ms/op |
+| kineticHeapRemoves               | 100          | 10    | ss  | 0.215  | ms/op |
+| kineticHeapRemoves               | 100          | 100   | ss  | 0.483  | ms/op |
+| kineticHeapRemoves               | 100          | 1000  | ss  | 7.558  | ms/op |
+| kineticHeapRemoves               | 100          | 10000 | ss  | 50.519 | ms/op |
+| trivialHeapAddTimeForward        | 100          | 10    | ss  | 1.233  | ms/op |
+| trivialHeapAddTimeForward        | 100          | 100   | ss  | 1.666  | ms/op |
+| trivialHeapAddTimeForward        | 100          | 1000  | ss  | 3.034  | ms/op |
+| <b>trivialHeapAddTimeForward</b> | 100          | 10000 | ss  | 18.022 | ms/op |
+| trivialHeapInserts               | 100          | 10    | ss  | 0.025  | ms/op |
+| trivialHeapInserts               | 100          | 100   | ss  | 0.046  | ms/op |
+| trivialHeapInserts               | 100          | 1000  | ss  | 0.186  | ms/op |
+| trivialHeapInserts               | 100          | 10000 | ss  | 0.850  | ms/op |
+| trivialHeapRemoves               | 100          | 10    | ss  | 0.035  | ms/op |
+| trivialHeapRemoves               | 100          | 100   | ss  | 0.245  | ms/op |
+| trivialHeapRemoves               | 100          | 1000  | ss  | 0.363  | ms/op |
+| trivialHeapRemoves               | 100          | 10000 | ss  | 2.379  | ms/op |
 
 You can look at `testExample` folder to see a visual representation of the heap and 
 what happens with certificates when we are forwarding time. 
